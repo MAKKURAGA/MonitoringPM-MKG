@@ -221,7 +221,7 @@ function draw(){
  $('#cards').innerHTML=[3,2,1,0].map(i=>{const p=all.length?Math.round(cnt[i]/all.length*100):0;return `<button class="sm k${i}${f==i?' act':''}${cnt[i]?'':' z'}" style="--c:${CL[i]}" onclick="f=f==${i}?-1:${i};draw()"><span class="sl"><i></i>${LB[i]}</span><span class="kv"><b>${cnt[i]}</b><span class="pc">${p}%</span></span><span class="pb"><i style="width:${p}%"></i></span></button>`}).join('');
  const nd=all.filter(x=>!dayInfo(x.r,c)),sd=nd.filter(x=>(dAgo(x.r[c.tgl])??1)<=0).length;
  $('#upd').innerHTML='<span class="lbl">Update '+c.u+' hari ini</span><div class="seg">'+[['','Semua',all.length],['B','Belum',nd.length-sd],['S','Sudah',sd]].map(([v,l,n])=>`<button class="${uf==v?'on':''}" onclick="uf='${v}';draw()">${l} (${n})</button>`).join('')+'</div>';
- const rows=all.filter(x=>(f<0||x.s==f)&&(!uf||(!dayInfo(x.r,c)&&((dAgo(x.r[c.tgl])??1)<=0)==(uf=='S')))&&[x.r[c.id],x.r[c.tipe],x.r[c.lok]].join(' ').toLowerCase().includes(q)).sort((a,b)=>(b.s||-1)-(a.s||-1));
+ const rows=all.filter(x=>(f<0||x.s==f)&&(!uf||(!dayInfo(x.r,c)&&((dAgo(x.r[c.tgl])??1)<=0)==(uf=='S')))&&[x.r[c.id],x.r[c.tipe],x.r[c.lok]].join(' ').toLowerCase().includes(q)).sort((a,b)=>String(a.r[c.id]).localeCompare(String(b.r[c.id]),'id',{numeric:true}));
  const esc=v=>String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;'),e=v=>v===''||v==null?'<span class="nil">—</span>':v,ng=c.nm.length;
  const head='<thead><tr>'+['Tipe','ID Unit','Lokasi','Update '+c.u,'Actual '+c.u].map((x,i)=>`<th rowspan="2"${i==4?' class="n"':''}>${x}</th>`).join('')+c.nm.map(x=>`<th colspan="2" class="g gl">${x}</th>`).join('')+'<th rowspan="2" class="gl">Catatan</th><th rowspan="2">Status</th></tr><tr>'+c.nm.map(()=>'<th class="sub gl n">To Run</th><th class="sub n">Next</th>').join('')+'</tr></thead>';
  const body=rows.map(({r,s})=>{const dy=dayInfo(r,c);return `<tr class="u" onclick="openF('${String(r[c.id]).replace(/'/g,"\\'")}')"><td>${e(r[c.tipe])}</td><td><b>${r[c.id]}</b></td><td>${e(r[c.lok])}</td>${dy?dUpd(dy):`<td>${ub(r[c.tgl])}</td><td class="n">${e(r[c.act])}</td>`}`+
@@ -244,7 +244,7 @@ function drawHR(q){
  $('#upd').innerHTML='<span class="lbl">Jenis unit</span><div class="seg">'+[['','Semua',all.length],['Mesin Las','Mesin Las',ng('Mesin Las')],['Kompresor','Kompresor',ng('Kompresor')]].map(([v,l,n])=>`<button class="${hf==v?'on':''}" onclick="hf='${v}';draw()">${l} (${n})</button>`).join('')+'</div>';
  const esc=v=>String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;'),e=v=>v===''||v==null?'<span class="nil">—</span>':v;
  const rows=base.filter(x=>(f<0||x.s==f)&&[x.r[c.id],x.r[c.tipe],x.r[c.lok],x.g].join(' ').toLowerCase().includes(q))
-  .sort((a,b)=>((a.g=='Kompresor')-(b.g=='Kompresor'))||((b.s||-1)-(a.s||-1))||((a.di.left==null?1e9:a.di.left)-(b.di.left==null?1e9:b.di.left))||String(a.r[c.id]).localeCompare(String(b.r[c.id]),'id',{numeric:true}));
+  .sort((a,b)=>((a.g=='Kompresor')-(b.g=='Kompresor'))||String(a.r[c.id]).localeCompare(String(b.r[c.id]),'id',{numeric:true}));
  const hd=['Tipe','ID Unit','Lokasi','Interval','PM Terakhir','Berjalan','Sisa Hari','Jatuh Tempo','Catatan','Status'];
  const head='<thead><tr>'+hd.map((h,i)=>`<th${[3,5,6,7].includes(i)?' class="n"':''}>${h}</th>`).join('')+'</tr></thead>';
  let body='',cur=null;
