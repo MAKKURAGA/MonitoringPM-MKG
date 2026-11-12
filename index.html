@@ -141,7 +141,7 @@ td.empty{padding:40px;height:auto;color:var(--mu);text-align:center}
 .cll{font-size:11px;color:var(--mu);margin:2px 0}
 .net{font-size:12px;font-weight:600;padding:5px 10px;border:1px solid var(--ln);border-radius:4px;white-space:nowrap;background:#fff}.net.on{color:#157347}.net.off{color:#b45309;background:#fffbeb;border-color:#fcd34d}.net.sy{color:#1d4ed8}
 </style></head><body>
-<div id="app"><aside><div class="brand"><img class="logo" id="lg" alt="Logo Makkuraga Grup"><div><h1>PM MONITORING</h1><div class="tag">Makkuraga Grup</div></div></div><nav id="tabs"></nav></aside><main><div class="top"><div class="tl"><button id="mt" title="Perkecil / perbesar menu" onclick="document.body.classList.toggle('mini');try{localStorage.setItem('pmMini',document.body.classList.contains('mini')?'1':'')}catch(e){}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button><div id="ttl"></div></div><div class="tools"><input id="q" placeholder="Cari ID / tipe / lokasi" oninput="draw()"><span id="net" class="net"></span><button id="rf" onclick="refreshNow()">Refresh</button></div></div><div id="cards"></div><div id="upd"></div><div class="w"><table id="t"></table></div></main></div>
+<div id="app"><aside><div class="brand"><img class="logo" id="lg" alt="Logo Makkuraga Grup"><div><h1>PM MONITORING</h1><div class="tag">Makkuraga Grup</div></div></div><nav id="tabs"></nav></aside><main><div class="top"><div class="tl"><button id="mt" title="Perkecil / perbesar menu" onclick="document.body.classList.toggle('mini');try{localStorage.setItem('pmMini',document.body.classList.contains('mini')?'1':'')}catch(e){}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button><div id="ttl"></div></div><div class="tools"><input id="q" placeholder="Cari ID / tipe / lokasi" oninput="draw()"><span id="net" class="net"></span><button id="png" onclick="exportPNG()" title="Unduh gambar HD unit yang jadwal PM sudah lewat (Overdue) untuk dikirim ke grup WA">Unduh PNG</button><button id="rf" onclick="refreshNow()">Refresh</button></div></div><div id="cards"></div><div id="upd"></div><div class="w"><table id="t"></table></div></main></div>
 <div id="m"><div id="f"></div></div>
 <script>
 const API='https://script.google.com/macros/s/AKfycbxWzRsPDEzqFb33nZ1x7fCYm16kbbVPluz-p_t8BUV85BkVY9Kpl6VO0zaex2x8_Tca/exec';
@@ -214,6 +214,7 @@ async function load_(silent,fresh){
 function draw(){
  const c=C[k],q=$('#q').value.toLowerCase();
  $('#tabs').innerHTML=Object.keys(T).map(x=>`<button class="${x==k?'on':''}" onclick="k='${x}';f=-1;uf='';draw()" title="${T[x]}"><b class="ni">${{DT:'DT',LV:'LV',AB:'AB',HR:'LK',P:'PL',H:'PM'}[x]}</b><span class="nl">${T[x]}</span></button>`).join('');$('#ttl').innerHTML=(k=='H'?'':'<span class="t1">Preventive Maintenance</span>')+'<span class="t2">'+T[k]+'</span>';
+ {const pb=$('#png');if(pb)pb.style.display=(k=='H')?'none':''}
  if(k=='H')return drawH(q);
  if(k=='P')return drawP(q);
  if(k=='HR')return drawHR(q);
@@ -280,7 +281,7 @@ function pNext(kk,r,c,id,best){
   if(m==null)return null;const nm=PM.LV[(m-1)%6].split(':');
   return {t:nm[0],sub:(nm[1]||'').trim(),e,hm:e?m*5000:0,u:'KM'}}
  return null}
-const pNx=n=>!n||!n.t?'<span class="nil">—</span>':'<b>'+pEsc(n.t)+'</b>'+(n.sub?'<div style="font-size:11px;color:var(--mu)">'+pEsc(n.sub.toLowerCase())+'</div>':'')+(n.e?'<div style="font-size:10.5px;color:var(--mu)">perkiraan'+(n.hm?' · ±'+n.hm.toLocaleString('id-ID')+' '+n.u:'')+'</div>':'');
+const pNx=n=>!n||!n.t?'<span class="nil">—</span>':'<b>'+pEsc(n.t)+'</b>'+(n.sub?'<div style="font-size:11px;color:var(--mu)">'+pEsc(n.sub.toLowerCase())+'</div>':'');
 function pCands(){const out=[];PK.forEach(kk=>{const c=C[kk];((D.rows||{})[kk]||[]).forEach(r=>{const id=String(r[c.id]==null?'':r[c.id]).trim();if(!id)return;
  const dy=dayInfo(r,c);let best=dy?(dy.left==null?null:{n:c.nm[0],v:dy.left,u:'Hari'}):null;if(!dy)c.tor.forEach((t,j)=>{const v=num(r[t]);if(v!=null&&(best==null||v<best.v))best={n:c.nm[j],v,u:c.u}});
  out.push({kk,key:kk+'|'+id,id,tipe:r[c.tipe]||'',lok:r[c.lok]||'',act:dy?(dy.el==null?'':dy.el+' Hari'):r[c.act],s:st(r,c),best,u:c.u,nx:pNext(kk,r,c,id,best)})})});return out}
@@ -496,6 +497,129 @@ async function clSv(i){const r=HRW[i],items={};let nok=0,bad=null;
  const[u,pm]=clUnit(r),body={key:'CL',unit:u,id:String(r[3]).trim(),tgl:String(r[1]).slice(0,10),pm,mek,ver,st,items,cat:$('#clc').value.trim()},b=$('#clsb');
  if(b){b.disabled=true;b.textContent='Menyimpan...'}
  D.clr=(D.clr||[]).filter(x=>[x[0],String(x[1]).trim(),clN(x[2])].join('|')!=clRK(r)).concat([[body.tgl,body.id,pm,mek,ver,st,items,body.cat]]);clClose();draw();enqueue(body)}
+/* ===== UNDUH PNG: baris hanya unit OVERDUE; lencana pojok kanan tetap menghitung Due Soon + Overdue ===== */
+function exportPNG(){
+ if(!D||k=='H')return;
+ if(k=='P')return exportPlanPNG();
+ const hr=k=='HR',c=C[k],byId=(a,b)=>String(a.r[c.id]).localeCompare(String(b.r[c.id]),'id',{numeric:true});
+ const all=hr?(D.rows.HR||[]).map(r=>{const di=hrInfo(r);return{r,di,s:di.s}}):D.rows[k].map(r=>({r,s:st(r,c)}));
+ const near=all.filter(x=>x.s>=2),list=near.filter(x=>x.s==3).sort(byId);
+ if(!list.length){alert('Tidak ada unit dengan jadwal PM sudah lewat di '+T[k]+'.');return}
+ const nO=list.length,nD=near.length-nO,v=x=>x==null||x===''?'–':String(x);
+ let cols=[{h:'Tipe',w:110,f:x=>v(hr?(x.r[c.tipe]||HG(x.r[c.id])):x.r[c.tipe])},{h:'ID Unit',w:120,b:1,f:x=>v(x.r[c.id])},{h:'Lokasi',w:120,f:x=>v(x.r[c.lok])}];
+ if(hr){
+  cols.push({h:'PM Terakhir',w:130,f:x=>x.di.last?fd(x.di.last):'–'},
+   {h:'Sisa Hari',w:140,al:'r',z:x=>x.s,f:x=>x.di.left==null?'–':x.di.left<0?'Lewat '+(-x.di.left)+' Hari':x.di.left==0?'Hari ini':x.di.left+' Hari'},
+   {h:'Jatuh Tempo',w:130,al:'r',f:x=>x.di.next?fd(x.di.next):'–'});
+ }else{
+  cols.push({h:'Actual '+c.u,w:110,al:'r',f:x=>v(x.r[c.act])});
+  c.tor.forEach((t,j)=>{
+   cols.push({g:c.nm[j],h:'To Run',w:100,al:'r',z:x=>{const n=num(x.r[t]);return n==null?0:n<=0?3:n<=D.cfg[c.w[j]][2]?2:1},f:x=>v(x.r[t])});
+   cols.push({g:c.nm[j],h:'Next',w:100,al:'r',f:x=>v(x.r[c.nx[j]])})})}
+ cols.push({h:'Status',w:120,al:'c',st:1,f:x=>LB[x.s]});
+ const S=2,PAD=24,RH=34,TOP=92,FOOT=36,hasG=cols.some(x=>x.g),HH=hasG?RH*2:RH,W=cols.reduce((a,x)=>a+x.w,0)+PAD*2,H=TOP+HH+list.length*RH+FOOT;
+ const cv=document.createElement('canvas');cv.width=W*S;cv.height=H*S;
+ const g=cv.getContext('2d'),FF='"Segoe UI",Roboto,Arial,sans-serif',TC=['#475569','#157347','#8a5a00','#b42318'],BG=['','','#fff1b8','#f9c9c4'];
+ g.scale(S,S);g.textBaseline='middle';
+ const fit=(t,m)=>{if(g.measureText(t).width<=m)return t;while(t.length>1&&g.measureText(t+'…').width>m)t=t.slice(0,-1);return t+'…'};
+ const txt=(t,x,y,al,m)=>{g.textAlign=al;g.fillText(fit(String(t),m),x,y)};
+ g.fillStyle='#fff';g.fillRect(0,0,W,H);
+ g.fillStyle='#d85a30';g.fillRect(0,0,W,8);
+ g.fillStyle='#1f2937';g.font='700 24px '+FF;txt('PM MONITORING · '+T[k],PAD,42,'left',W-PAD*2-260);
+ const d=new Date();g.fillStyle='#6b7280';g.font='400 14px '+FF;
+ txt('Unit jadwal PM sudah lewat · '+d.toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'})+' · '+d.toTimeString().slice(0,5),PAD,70,'left',W-PAD*2);
+ /* lencana jumlah (kanan atas) */
+ let bx=W-PAD;[[nD,'DUE SOON',2],[nO,'OVERDUE',3]].forEach(([n,l,s])=>{
+  g.font='700 13px '+FF;const t=l+'  '+n,w=g.measureText(t).width+24;bx-=w;
+  g.fillStyle=BG[s];g.beginPath();g.roundRect?g.roundRect(bx,26,w,28,14):g.rect(bx,26,w,28);g.fill();
+  g.fillStyle=TC[s];txt(t,bx+w/2,40,'center',w);bx-=8});
+ /* header tabel */
+ let x0=PAD,y0=TOP;g.fillStyle='#f3f4f6';g.fillRect(PAD,y0,W-PAD*2,HH);
+ g.fillStyle='#374151';g.font='700 13px '+FF;
+ cols.forEach((cc,i)=>{cc.x=x0;x0+=cc.w});
+ if(hasG){
+  for(let i=0;i<cols.length;){const cc=cols[i];let j=i;while(j<cols.length&&cols[j].g==cc.g&&cc.g)j++;
+   if(cc.g){const w=cols[j-1].x+cols[j-1].w-cc.x;txt(cc.g,cc.x+w/2,y0+RH/2,'center',w-8);
+    g.fillStyle='#dfe3e8';g.fillRect(cc.x,y0+RH,w,1);g.fillStyle='#374151';
+    for(let m=i;m<j;m++)txt(cols[m].h,cols[m].al=='r'?cols[m].x+cols[m].w-12:cols[m].x+cols[m].w/2,y0+RH*1.5,cols[m].al=='r'?'right':'center',cols[m].w-16);i=j}
+   else{txt(cc.h,cc.al=='c'?cc.x+cc.w/2:cc.x+12,y0+RH,cc.al=='c'?'center':'left',cc.w-16);i++}}
+ }else cols.forEach(cc=>txt(cc.h,cc.al=='r'?cc.x+cc.w-12:cc.al=='c'?cc.x+cc.w/2:cc.x+12,y0+RH/2,cc.al=='r'?'right':cc.al=='c'?'center':'left',cc.w-16));
+ /* baris data */
+ list.forEach((it,ri)=>{
+  const y=y0+HH+ri*RH;
+  if(ri%2){g.fillStyle='#fafbfc';g.fillRect(PAD,y,W-PAD*2,RH)}
+  cols.forEach(cc=>{
+   const z=cc.z?cc.z(it):0,t=cc.f(it);
+   if(z>=2){g.fillStyle=BG[z];g.fillRect(cc.x,y,cc.w,RH)}
+   g.fillStyle=cc.st?TC[it.s]:z>=2?(z==3?'#8a1c12':'#5c4400'):'#1f2937';
+   g.font=(cc.b||cc.st||z>=2?'700 ':'400 ')+'14px '+FF;
+   txt(t,cc.al=='r'?cc.x+cc.w-12:cc.al=='c'?cc.x+cc.w/2:cc.x+12,y+RH/2,cc.al=='r'?'right':cc.al=='c'?'center':'left',cc.w-20)});
+  g.fillStyle='#e5e7eb';g.fillRect(PAD,y+RH-1,W-PAD*2,1)});
+ g.strokeStyle='#c9ced6';g.lineWidth=1;g.strokeRect(PAD+.5,y0+.5,W-PAD*2-1,HH+list.length*RH-1);
+ g.fillStyle='#6b7280';g.font='400 12px '+FF;
+ txt('Makkuraga Grup · '+list.length+' dari '+all.length+' unit jadwal PM sudah lewat'+(lastSync?' · data tersinkron '+lastSync:''),PAD,H-FOOT/2+4,'left',W-PAD*2);
+ const name='PM_'+T[k].replace(/[^A-Za-z0-9]+/g,'-')+'_'+today()+'.png';
+ cv.toBlob(b=>{
+  if(!b){alert('Gagal membuat gambar.');return}
+  const dl=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000)};
+  const file=new File([b],name,{type:'image/png'});
+  if(/Android|iPhone|iPad/i.test(navigator.userAgent)&&navigator.canShare&&navigator.canShare({files:[file]})){navigator.share({files:[file],title:'PM '+T[k]}).catch(e=>{if(!e||e.name!=='AbortError')dl()});return}
+  dl()},'image/png')}
+
+/* ===== UNDUH PNG PLAN PM: semua unit mendekati / melewati jadwal PM (untuk logistik menyiapkan part) ===== */
+function exportPlanPNG(){
+ if(!D)return;
+ const cat=pcat&&PCAT[pcat]?pcat:'',all=pCands().filter(x=>!cat||x.kk==cat),list=all.filter(x=>x.s>=2).sort((a,b)=>b.s-a.s||((a.best?a.best.v:1e9)-(b.best?b.best.v:1e9)));
+ if(!list.length){alert('Tidak ada unit yang mendekati PM (Due Soon / Overdue)'+(cat?' di '+PCAT[cat]:'')+'.');return}
+ const nO=list.filter(x=>x.s==3).length,nD=list.length-nO,v=x=>x==null||x===''?'–':String(x);
+ const cols=[
+  {h:'Kategori',w:140,f:x=>PCAT[x.kk]},
+  {h:'ID Unit',w:100,b:1,f:x=>v(x.id)},
+  {h:'Tipe',w:160,f:x=>v(x.tipe)},
+  {h:'Lokasi',w:90,f:x=>v(x.lok)},
+  {h:'Actual',w:100,al:'r',f:x=>v(x.act)},
+  {h:'Komponen Terdekat',w:210,z:x=>x.s,f:x=>!x.best?'–':x.best.v<=0?x.best.n+': Lewat '+(-x.best.v).toLocaleString('id-ID')+' '+x.best.u:x.best.n+': '+x.best.v.toLocaleString('id-ID')+' '+x.best.u},
+  {h:'PM Berikutnya',w:330,b:1,f:x=>{const n=x.nx;if(!n||!n.t)return '–';return n.t+(n.sub?' · '+n.sub.toLowerCase():'')}},
+  {h:'Status',w:110,al:'c',st:1,f:x=>LB[x.s]}];
+ cols.forEach(cc=>{cc.al='c'});
+ const S=2,PAD=24,RH=34,TOP=92,FOOT=36,W=cols.reduce((a,x)=>a+x.w,0)+PAD*2,H=TOP+RH+list.length*RH+FOOT;
+ const cv=document.createElement('canvas');cv.width=W*S;cv.height=H*S;
+ const g=cv.getContext('2d'),FF='"Segoe UI",Roboto,Arial,sans-serif',TC=['#475569','#157347','#8a5a00','#b42318'],BG=['','','#fff1b8','#f9c9c4'];
+ g.scale(S,S);g.textBaseline='middle';
+ const fit=(t,m)=>{if(g.measureText(t).width<=m)return t;while(t.length>1&&g.measureText(t+'…').width>m)t=t.slice(0,-1);return t+'…'};
+ const txt=(t,x,y,al,m)=>{g.textAlign=al;g.fillText(fit(String(t),m),x,y)};
+ g.fillStyle='#fff';g.fillRect(0,0,W,H);
+ g.fillStyle='#d85a30';g.fillRect(0,0,W,8);
+ g.fillStyle='#1f2937';g.font='700 24px '+FF;txt('PM MONITORING · Plan PM'+(cat?' · '+PCAT[cat]:''),PAD,42,'left',W-PAD*2-260);
+ const d=new Date();g.fillStyle='#6b7280';g.font='400 14px '+FF;
+ txt('Unit mendekati jadwal PM · '+d.toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'})+' · '+d.toTimeString().slice(0,5),PAD,70,'left',W-PAD*2);
+ let bx=W-PAD;[[nD,'DUE SOON',2],[nO,'OVERDUE',3]].forEach(([n,l,s])=>{
+  g.font='700 13px '+FF;const t=l+'  '+n,w=g.measureText(t).width+24;bx-=w;
+  g.fillStyle=BG[s];g.beginPath();g.roundRect?g.roundRect(bx,26,w,28,14):g.rect(bx,26,w,28);g.fill();
+  g.fillStyle=TC[s];txt(t,bx+w/2,40,'center',w);bx-=8});
+ let x0=PAD;const y0=TOP;g.fillStyle='#f3f4f6';g.fillRect(PAD,y0,W-PAD*2,RH);
+ g.fillStyle='#374151';g.font='700 13px '+FF;
+ cols.forEach(cc=>{cc.x=x0;x0+=cc.w;txt(cc.h,cc.al=='r'?cc.x+cc.w-12:cc.al=='c'?cc.x+cc.w/2:cc.x+12,y0+RH/2,cc.al=='r'?'right':cc.al=='c'?'center':'left',cc.w-16)});
+ list.forEach((it,ri)=>{
+  const y=y0+RH+ri*RH;
+  if(ri%2){g.fillStyle='#fafbfc';g.fillRect(PAD,y,W-PAD*2,RH)}
+  cols.forEach(cc=>{
+   const z=cc.z?cc.z(it):0,t=cc.f(it);
+   if(z>=2){g.fillStyle=BG[z];g.fillRect(cc.x,y,cc.w,RH)}
+   g.fillStyle=cc.st?TC[it.s]:z>=2?(z==3?'#8a1c12':'#5c4400'):'#1f2937';
+   g.font=(cc.b||cc.st||z>=2?'700 ':'400 ')+'14px '+FF;
+   txt(t,cc.al=='r'?cc.x+cc.w-12:cc.al=='c'?cc.x+cc.w/2:cc.x+12,y+RH/2,cc.al=='r'?'right':cc.al=='c'?'center':'left',cc.w-20)});
+  g.fillStyle='#e5e7eb';g.fillRect(PAD,y+RH-1,W-PAD*2,1)});
+ g.strokeStyle='#c9ced6';g.lineWidth=1;g.strokeRect(PAD+.5,y0+.5,W-PAD*2-1,RH+list.length*RH-1);
+ g.fillStyle='#6b7280';g.font='400 12px '+FF;
+ txt('Makkuraga Grup · '+list.length+' dari '+all.length+' unit'+(cat?' '+PCAT[cat]:'')+' mendekati / melewati jadwal PM · untuk perhatian Pengawas & Logistik'+(lastSync?' · data tersinkron '+lastSync:''),PAD,H-FOOT/2+4,'left',W-PAD*2);
+ const name='PM_Plan-PM'+(cat?'_'+PCAT[cat].replace(/[^A-Za-z0-9]+/g,'-'):'')+'_'+today()+'.png';
+ cv.toBlob(b=>{
+  if(!b){alert('Gagal membuat gambar.');return}
+  const dl=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000)};
+  const file=new File([b],name,{type:'image/png'});
+  if(/Android|iPhone|iPad/i.test(navigator.userAgent)&&navigator.canShare&&navigator.canShare({files:[file]})){navigator.share({files:[file],title:'PM Plan PM'+(cat?' '+PCAT[cat]:'')}).catch(e=>{if(!e||e.name!=='AbortError')dl()});return}
+  dl()},'image/png')}
 try{if(localStorage.getItem('pmMini'))document.body.classList.add('mini')}catch(e){}
 (async()=>{const q=await kvGet('queue');if(Array.isArray(q))Q=q;netUI();await load();flush()})();
 </script></body></html>
