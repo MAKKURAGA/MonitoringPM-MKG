@@ -1,6 +1,6 @@
 /* PM MKG - service worker
    Naikkan angka VERSI setiap kali index.html diperbarui agar HP mengambil versi baru. */
-const VERSI='pm-mkg-v4';
+const VERSI='pm-mkg-v5';
 const SHELL=['./','./index.html','./manifest.json','./icon-192.png','./icon-512.png'];
 
 self.addEventListener('install',e=>{

@@ -77,6 +77,7 @@ th.sub{font-weight:500;color:var(--mu);font-size:11px}
 tbody td{height:48px}
 tbody tr:hover td{background:#f6f7f9}
 tr.u{cursor:pointer}
+td.idc{cursor:pointer}td.idc:hover b{color:#d85a30;text-decoration:underline}
 tbody tr:last-child td{border-bottom:0}
 td.n.z2{background:#fff1b8;color:#5c4400;font-weight:600}
 td.n.z3{background:#f9c9c4;color:#8a1c12;font-weight:600}
@@ -101,7 +102,11 @@ td.empty{padding:40px;height:auto;color:var(--mu);text-align:center}
 .hd{display:flex;justify-content:space-between;align-items:center;gap:8px;padding-bottom:10px;border-bottom:1px solid var(--ln);margin-bottom:4px}
 .ft{font-size:17px;font-weight:700}.fs{font-size:12px;color:var(--mu)}
 .lk{height:28px;font-size:12px;color:#b2431f;border-color:#e8b9a8;background:var(--acbg);font-weight:600}
-.hl{font-size:12px;color:#475569;margin-top:2px}.hs{height:150px;overflow-y:auto;border:1px solid var(--ln);border-radius:3px;padding:0 10px;-webkit-overflow-scrolling:touch}
+.hl{font-size:12px;color:#475569;margin-top:2px}.ki{width:92px;padding:5px 7px;border:1px solid var(--ln);border-radius:4px;text-align:center;font:inherit;background:#fff;color:inherit}.ki:focus{outline:2px solid #d95a2b;outline-offset:-1px}.ki::-webkit-outer-spin-button,.ki::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}.ki{-moz-appearance:textfield}
+.pmc{cursor:pointer}.pmc:hover{box-shadow:inset 0 0 0 2px #d95a2b}
+#pmtip{position:fixed;z-index:9999;display:none;max-width:380px;background:#ffffe1;color:#000;border:1px solid #000;box-shadow:2px 2px 5px rgba(0,0,0,.25);padding:6px 9px;font-size:12px;line-height:1.5;text-align:left;pointer-events:none;white-space:nowrap}
+#pmtip b{font-weight:700}#pmtip .tn{color:#555;font-size:11px}
+.hs{height:150px;overflow-y:auto;border:1px solid var(--ln);border-radius:3px;padding:0 10px;-webkit-overflow-scrolling:touch}
 .hr{display:grid;grid-template-columns:30px 88px 1fr auto;gap:8px;padding:8px 0;border-bottom:1px dashed var(--ln);align-items:baseline}.hr:last-child{border-bottom:0}
 .hn{color:var(--ac);font-weight:700}.hk{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
 /* HP */
@@ -185,7 +190,7 @@ LV:{id:0,tipe:1,lok:2,tgl:3,act:5,note:8,tor:[4],nm:['SERVIS'],last:[6],nx:[7],w
 AB:{tipe:0,id:1,lok:2,tgl:3,act:5,note:8,tor:[4],nm:['SERVIS'],last:[6],nx:[7],w:[5],u:'HM'},
 HR:{tipe:1,id:0,lok:2,tgl:3,act:4,last:[5],tor:[6],nx:[5],note:7,nm:['Jadwal PM'],w:[],u:'Hari'}};
 const T={AB:'Heavy Equipment',DT:'Dump Truck',LV:'LV & Equipment',HR:'Mesin Las & Kompresor',P:'Plan PM',H:'History PM'},SN={DT:'PM DUMP TRUCK',LV:'PM LV & PERALATAN',AB:'PM ALAT BERAT',HR:'PM LAS & KOMPRESOR'},LB=['NO DATA','NOT DUE','DUE SOON','OVERDUE'],CL=['#475569','#22c55e','#facc15','#ef4444'];
-let D,k='DT',f=-1;const $=s=>document.querySelector(s),num=v=>v===''||v==null||isNaN(+v)?null:+v;
+let D,k='P',f=-1;const $=s=>document.querySelector(s),num=v=>v===''||v==null||isNaN(+v)?null:+v;
 const addDays=(p,n)=>new Date(Date.parse(p)+n*864e5).toISOString().slice(0,10),daysTo=p=>Math.round((Date.parse(p)-Date.parse(today()))/864e5);
 const dUpd=d=>`<td><span class="bd b0">${d.last?fd(d.last):'—'}</span><div class="dt">Interval ${d.iv==null?'—':d.iv} Hari</div></td><td class="n">${d.el==null?'<span class="nil">—</span>':d.el+' Hari'}</td>`,
  dCells=d=>`<td class="gl n z${d.s}">${d.left==null?'–':d.left+' Hari'}</td><td class="n">${d.next?fd(d.next):'<span class="nil">—</span>'}</td>`;
@@ -212,6 +217,7 @@ async function load_(silent,fresh){
    :'Browser tidak dapat respons dari URL Apps Script ('+e.message+').<br>Penyebab umum: akses deploy bukan <b>Anyone</b>, atau versi deploy belum diperbarui.<br>Tes: buka URL /exec di tab incognito — harus tampil JSON.';
   $('#t').innerHTML='<tr><td style="padding:24px;color:#b91c1c;line-height:1.6">'+why+'</td></tr>'}}
 function draw(){
+ {const ae=document.activeElement;if(!window._kmCommit&&ae&&ae.classList&&ae.classList.contains('ki')&&ae.value!==ae.defaultValue)return}
  const c=C[k],q=$('#q').value.toLowerCase();
  $('#tabs').innerHTML=Object.keys(T).map(x=>`<button class="${x==k?'on':''}" onclick="k='${x}';f=-1;uf='';draw()" title="${T[x]}"><b class="ni">${{DT:'DT',LV:'LV',AB:'AB',HR:'LK',P:'PL',H:'PM'}[x]}</b><span class="nl">${T[x]}</span></button>`).join('');$('#ttl').innerHTML=(k=='H'?'':'<span class="t1">Preventive Maintenance</span>')+'<span class="t2">'+T[k]+'</span>';
  {const pb=$('#png');if(pb)pb.style.display=(k=='H')?'none':''}
@@ -225,10 +231,13 @@ function draw(){
  const rows=all.filter(x=>(f<0||x.s==f)&&(!uf||(!dayInfo(x.r,c)&&((dAgo(x.r[c.tgl])??1)<=0)==(uf=='S')))&&[x.r[c.id],x.r[c.tipe],x.r[c.lok]].join(' ').toLowerCase().includes(q)).sort((a,b)=>String(a.r[c.id]).localeCompare(String(b.r[c.id]),'id',{numeric:true}));
  const esc=v=>String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;'),e=v=>v===''||v==null?'<span class="nil">—</span>':v,ng=c.nm.length;
  const head='<thead><tr>'+['Tipe','ID Unit','Lokasi','Update '+c.u,'Actual '+c.u].map((x,i)=>`<th rowspan="2"${i==4?' class="n"':''}>${x}</th>`).join('')+c.nm.map(x=>`<th colspan="2" class="g gl">${x}</th>`).join('')+'<th rowspan="2" class="gl">Catatan</th><th rowspan="2">Status</th></tr><tr>'+c.nm.map(()=>'<th class="sub gl n">To Run</th><th class="sub n">Next</th>').join('')+'</tr></thead>';
- const body=rows.map(({r,s})=>{const dy=dayInfo(r,c);return `<tr class="u" onclick="openF('${String(r[c.id]).replace(/'/g,"\\'")}')"><td>${e(r[c.tipe])}</td><td><b>${r[c.id]}</b></td><td>${e(r[c.lok])}</td>${dy?dUpd(dy):`<td>${ub(r[c.tgl])}</td><td class="n">${e(r[c.act])}</td>`}`+
-  (dy?dCells(dy):c.tor.map((t,j)=>{const v=num(r[t]);const z=v==null?0:v<=0?3:v<=D.cfg[c.w[j]][2]?2:1;return`<td class="gl n z${z}">${v==null?'–':v}</td><td class="n">${e(r[c.nx[j]])}</td>`}).join(''))+
+ const body=rows.map(({r,s})=>{const dy=dayInfo(r,c);return `<tr><td>${e(r[c.tipe])}</td><td class="idc" onclick="openF('${String(r[c.id]).replace(/'/g,"\\'")}')" title="Klik untuk riwayat KM / History PM"><b>${r[c.id]}</b></td><td>${e(r[c.lok])}</td>${dy?dUpd(dy):`<td>${ub(r[c.tgl])}</td><td class="n" style="text-align:center" onclick="event.stopPropagation()"><input class="ki" type="number" step="any" inputmode="decimal" placeholder="—" data-id="${esc(r[c.id]).replace(/"/g,'&quot;')}" value="${esc(r[c.act])}" onfocus="this.select()" onkeydown="kmKey(event,this)" onchange="saveKM(this)"></td>`}`+
+  (dy?dCells(dy):c.tor.map((t,j)=>{const v=num(r[t]);const z=v==null?0:v<=0?3:v<=D.cfg[c.w[j]][2]?2:1;
+   const pa=(k=='DT'||k=='AB'||k=='LV')?` pmc" onclick="event.stopPropagation();pmAsk('${String(r[c.id]).replace(/'/g,"\\'")}',${j})" data-hid="${encodeURIComponent(String(r[c.id]))}" data-hj="${j}`:'';
+   return`<td class="gl n z${z}${pa}">${v==null?'–':v}${k=='AB'||k=='LV'?abSub(r,c,j):''}</td><td class="n">${e(r[c.nx[j]])}</td>`}).join(''))+
   `<td class="nt">${e(esc(r[c.note]))}</td><td class="sc p${s}">${LB[s]}</td></tr>`}).join('');
  $('#t').innerHTML=head+'<tbody>'+(body||`<tr><td class="empty" colspan="${7+2*ng}">Tidak ada unit yang cocok dengan filter.</td></tr>`)+'</tbody>';
+ $('#upd').insertAdjacentHTML('beforeend',undoBtn());
  $('#upd').insertAdjacentHTML('beforeend',`<span class="cnt">${rows.length} unit</span>`)}
 
 /* ===== MESIN LAS & KOMPRESOR (PM berbasis HARI, tab & sheet sendiri) ===== */
@@ -254,7 +263,7 @@ function drawHR(q){
   const {r,di,s}=x,id=String(r[c.id]).replace(/'/g,"\\'");
   const run=di.el==null?'<span class="nil">—</span>':di.el<0?'<span class="bd b2" title="Tanggal PM terakhir ada di masa depan, periksa data">Tgl di depan</span>':di.el+' Hari';
   const sisa=di.left==null?'–':di.left<0?'Lewat '+(-di.left)+' Hari':di.left==0?'Hari ini':di.left+' Hari';
-  body+=`<tr class="u" onclick="openF('${id}')"><td>${e(r[c.tipe]||x.g)}</td><td><b>${esc(r[c.id])}</b></td><td>${e(esc(r[c.lok]))}</td><td class="n">${di.iv} Hari</td><td>${di.last?fd(di.last):'<span class="nil">—</span>'}</td><td class="n">${run}</td><td class="gl n z${s}">${sisa}</td><td class="n">${di.next?fd(di.next):'<span class="nil">—</span>'}</td><td class="nt">${e(esc(r[c.note]))}</td><td class="sc p${s}">${LB[s]}</td></tr>`});
+  body+=`<tr><td>${e(r[c.tipe]||x.g)}</td><td class="idc" onclick="openF('${id}')" title="Klik untuk riwayat KM / History PM"><b>${esc(r[c.id])}</b></td><td>${e(esc(r[c.lok]))}</td><td class="n">${di.iv} Hari</td><td>${di.last?fd(di.last):'<span class="nil">—</span>'}</td><td class="n">${run}</td><td class="gl n z${s}">${sisa}</td><td class="n">${di.next?fd(di.next):'<span class="nil">—</span>'}</td><td class="nt">${e(esc(r[c.note]))}</td><td class="sc p${s}">${LB[s]}</td></tr>`});
  $('#t').innerHTML=head+'<tbody>'+(body||`<tr><td class="empty" colspan="10">${all.length?'Tidak ada unit yang cocok dengan filter.':'Belum ada unit di sheet PM LAS &amp; KOMPRESOR. Di spreadsheet jalankan menu PM SYSTEM › Setup PM Hari, lalu klik Refresh.'}</td></tr>`)+'</tbody>';
  $('#upd').insertAdjacentHTML('beforeend',`<span class="cnt">${rows.length} unit</span>`)}
 
@@ -262,10 +271,15 @@ function drawHR(q){
 let pv='',psel=new Set(),pall=false,pdate='',pcat='',PL=[];
 try{PL=JSON.parse(localStorage.getItem('pmPlan')||'[]')}catch(e){}
 const pSave=()=>{try{localStorage.setItem('pmPlan',JSON.stringify(PL))}catch(e){}};
+const pSnap=label=>undoPush({t:'plan',snap:JSON.stringify(PL),label});
 const PK=['DT','AB','LV','HR'],PCAT={DT:'Dump Truck',AB:'Heavy Equipment',LV:'LV & Equipment',HR:'Mesin Las & Kompresor'};
 const HEC=[500,1000,500,2000,500,1000,500,4000];
 const lastPM=(id,sn)=>(D.hist||[]).filter(x=>String(x[3])==String(id)&&x[2]==sn&&String(x[7]==null?'':x[7]).trim()).slice(-1)[0];
+let PMO={};try{PMO=JSON.parse(localStorage.getItem('pmPos')||'{}')}catch(e){}
+const pmoSave=()=>{try{localStorage.setItem('pmPos',JSON.stringify(PMO))}catch(e){}};
+function pmOv(kk,id){const o=PMO[kk+'|'+id];if(!o)return null;const H=lastPM(id,SN[kk]);if(H&&(pt(H[1])||'')>o.d){delete PMO[kk+'|'+id];pmoSave();return null}return o.i}
 function pNext(kk,r,c,id,best){
+ if(kk=='AB'||kk=='LV'){const ov=pmOv(kk,id);if(ov!=null){if(kk=='AB')return{t:'PM '+HEC[ov],e:0,i:ov,o:1,u:'HM'};const nm=PM.LV[ov].split(':');return{t:nm[0],sub:(nm[1]||'').trim(),e:0,i:ov,o:1,u:'KM'}}}
  if(kk=='DT'){const a=[];c.tor.forEach((t,j)=>{const v=num(r[t]);if(v!=null&&v<=D.cfg[c.w[j]][2])a.push(c.nm[j])});
   const t=a.length?a:(best?[best.n]:[]);return t.length?{t:'PM '+t.join(' + ')}:null}
  if(kk=='AB'){const H=lastPM(id,SN.AB),act=num(r[c.act]);let m=null,e=1;
@@ -274,12 +288,12 @@ function pNext(kk,r,c,id,best){
     for(let d=-3;d<=3;d++){const mm=m0+d;if(mm>=1&&HEC[(mm-1)%8]==n&&(bm==null||Math.abs(mm-ha/500)<Math.abs(bm-ha/500)))bm=mm}
     if(bm!=null){m=bm+1;e=0}}}
   if(m==null&&best)m=Math.max(1,Math.round(((act==null?0:act)+best.v)/500));
-  return m==null?null:{t:'PM '+HEC[(m-1)%8],e,hm:m*500,u:'HM'}}
+  return m==null?null:{t:'PM '+HEC[(m-1)%8],e,i:(m-1)%8,hm:m*500,u:'HM'}}
  if(kk=='LV'){const H=lastPM(id,SN.LV),act=num(r[c.act]);let m=null,e=1;
   const n=H?parseInt(String(H[7]).replace(/\D/g,'')):0;
   if(n>0){m=n+1;e=0}else if(best)m=Math.max(1,Math.round(((act==null?0:act)+best.v)/5000)+(0));
   if(m==null)return null;const nm=PM.LV[(m-1)%6].split(':');
-  return {t:nm[0],sub:(nm[1]||'').trim(),e,hm:e?m*5000:0,u:'KM'}}
+  return {t:nm[0],sub:(nm[1]||'').trim(),e,i:(m-1)%6,hm:e?m*5000:0,u:'KM'}}
  return null}
 const pNx=n=>!n||!n.t?'<span class="nil">—</span>':'<b>'+pEsc(n.t)+'</b>'+(n.sub?'<div style="font-size:11px;color:var(--mu)">'+pEsc(n.sub.toLowerCase())+'</div>':'');
 function pCands(){const out=[];PK.forEach(kk=>{const c=C[kk];((D.rows||{})[kk]||[]).forEach(r=>{const id=String(r[c.id]==null?'':r[c.id]).trim();if(!id)return;
@@ -293,11 +307,11 @@ function pPick(){const tk=($('#pid').value||'').split(/[\s,;]+/).filter(Boolean)
  tk.forEach(t=>{const m=all.filter(x=>x.id.toLowerCase()==t.toLowerCase());m.length?m.forEach(x=>psel.add(x.key)):miss.push(t)});
  if(miss.length)alert('ID tidak ditemukan: '+miss.join(', '));pcat='';draw()}
 function pAdd(){const d=$('#pdt').value;if(!psel.size)return alert('Pilih unit dulu.');if(!d)return alert('Isi tanggal plan.');
- psel.forEach(key=>{const [kk,id]=key.split('|');if(!PL.some(x=>x.kk==kk&&x.id==id&&!pDone(x)))PL.push({kk,id,cr:today(),tgl:d})});
+ pSnap('tambah '+psel.size+' unit ke plan');psel.forEach(key=>{const [kk,id]=key.split('|');if(!PL.some(x=>x.kk==kk&&x.id==id&&!pDone(x)))PL.push({kk,id,cr:today(),tgl:d})});
  psel.clear();pdate='';pv='R';pSave();draw()}
-function pDate(i,v){if(v){PL[i].tgl=v;pSave();draw()}}
-function pDel(i){if(confirm('Hapus unit '+PL[i].id+' dari plan?')){PL.splice(i,1);pSave();draw()}}
-function pClean(){const n=PL.filter(pDone).length;if(!n)return alert('Belum ada plan yang selesai.');if(confirm('Hapus '+n+' plan yang sudah selesai?')){PL=PL.filter(x=>!pDone(x));pSave();draw()}}
+function pDate(i,v){if(v){pSnap('ubah tanggal plan '+PL[i].id);PL[i].tgl=v;pSave();draw()}}
+function pDel(i){if(confirm('Hapus unit '+PL[i].id+' dari plan?')){pSnap('hapus '+PL[i].id+' dari plan');PL.splice(i,1);pSave();draw()}}
+function pClean(){const n=PL.filter(pDone).length;if(!n)return alert('Belum ada plan yang selesai.');if(confirm('Hapus '+n+' plan yang sudah selesai?')){pSnap('bersihkan '+n+' plan selesai');PL=PL.filter(x=>!pDone(x));pSave();draw()}}
 function pCopy(){const by={},all=pCands();PL.filter(x=>!pDone(x)).forEach(x=>{(by[x.tgl]=by[x.tgl]||[]).push(x)});
  const ds=Object.keys(by).sort();if(!ds.length)return alert('Belum ada rencana.');
  let t='*RENCANA PM*\n';ds.forEach(d=>{t+='\n*'+hr(d)+'*\n';by[d].forEach((x,i)=>{const u=all.find(a=>a.key==x.kk+'|'+x.id)||{};
@@ -313,7 +327,7 @@ function drawP(q){
   catSel=`<select class="hf" onchange="pcat=this.value;draw()" title="Filter sheet"><option value="">Semua sheet (${base.length})</option>${PK.map(k2=>`<option value="${k2}"${pcat==k2?' selected':''}>${PCAT[k2]} (${cc(k2)})</option>`).join('')}</select>`;
  const ctl=pv=='K'?`${catSel}<input id="pid" style="width:250px"><button onclick="pPick()">Pilih</button><span style="display:flex;gap:8px;margin-left:auto"><input type="date" id="pdt" value="${pdate||today()}" onchange="pdate=this.value"><button id="pcnt" class="on" onclick="pAdd()">Tambah ke Plan (${psel.size})</button></span>`
   :`${catSel}<span style="display:flex;gap:8px;margin-left:auto"><button onclick="pClean()">Bersihkan yang selesai</button><button class="on" onclick="pCopy()">Salin untuk WhatsApp</button></span>`;
- $('#upd').innerHTML=`<span class="lbl">Maintenance Plan</span><div class="seg">${seg}</div>${ctl}`;
+ $('#upd').innerHTML=`<span class="lbl">Maintenance Plan</span><div class="seg">${seg}</div>${ctl}`;$('#upd').insertAdjacentHTML('beforeend',undoBtn());
  const th=h=>'<thead><tr>'+h.map(x=>`<th>${x}</th>`).join('')+'</tr></thead>',em=(n,m)=>`<tr><td class="empty" colspan="${n}">${m}</td></tr>`;
  if(pv=='K'){
   const rows=all.filter(x=>(x.s>=2||psel.has(x.key))&&(!pcat||x.kk==pcat)&&[x.id,x.tipe,x.lok,PCAT[x.kk]].join(' ').toLowerCase().includes(q)).sort((a,b)=>b.s-a.s||((a.best?a.best.v:1e9)-(b.best?b.best.v:1e9)));
@@ -354,8 +368,249 @@ const ub=s=>{const n=dAgo(s);return n==null?'<span class="bd b2">Belum ada data<
 let uf='';
 const today=()=>new Date(Date.now()-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10);
 const histOf=id=>(D.hist||[]).filter(x=>String(x[3])==id&&x[2]==SN[k]).map((x,i)=>[x,i+1]);
+/* ===== NOTE HISTORY PM: arahkan kursor ke kolom To Run (Engine/Transmisi/Gardan) ===== */
+(function(){
+ const tip=document.createElement('div');tip.id='pmtip';document.body.appendChild(tip);
+ const X=v=>String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;'),MAX=15;
+ let cur=null;
+ function html(id,j){
+  const c=C[k],nm=c.nm[j],key=x=>pt(x[1])||'';
+  const a=(D.hist||[]).map((x,i)=>({x,i})).filter(o=>String(o.x[3])==id&&o.x[2]==SN[k]&&String(o.x[5]).trim().toUpperCase()==nm)
+   .sort((p,q)=>key(p.x)<key(q.x)?-1:key(p.x)>key(q.x)?1:p.i-q.i);
+  let h='<b>'+X(id)+' · '+X(nm)+':</b>';
+  if(!a.length)return h+'<div>Belum ada riwayat PM</div>';
+  const st=Math.max(0,a.length-MAX);
+  if(st)h+='<div class="tn">… '+st+' riwayat sebelumnya</div>';
+  a.slice(st).forEach((o,i)=>{const x=o.x,km=x[6]===''||x[6]==null?'':(+x[6]).toLocaleString('id-ID')+' '+c.u,jn=String(x[7]==null?'':x[7]).trim();
+   h+='<div>'+(st+i+1)+'. '+X(fd(pt(x[1])||x[1]))+(jn?' '+X(jn):'')+(km?' ('+km+')':'')+'</div>'});
+  return h+'<div class="tn" style="margin-top:3px">Klik untuk update PM'+(k=='DT'?' '+X(nm):'')+'</div>'}
+ function hide(){tip.style.display='none';cur=null}
+ document.addEventListener('mouseover',ev=>{
+  if(!matchMedia('(hover:hover)').matches)return;
+  const td=ev.target.closest&&ev.target.closest('td.pmc');
+  if(!td){if(cur)hide();return}
+  if(td===cur)return;cur=td;
+  tip.innerHTML=html(decodeURIComponent(td.dataset.hid),+td.dataset.hj);
+  tip.style.display='block';
+  const r=td.getBoundingClientRect(),w=tip.offsetWidth,h=tip.offsetHeight;
+  let l=r.right+6,t=r.top;
+  if(l+w>innerWidth-6)l=Math.max(6,r.left-w-6);
+  if(t+h>innerHeight-6)t=Math.max(6,innerHeight-h-6);
+  tip.style.left=l+'px';tip.style.top=t+'px'});
+ document.addEventListener('scroll',hide,true);
+ document.addEventListener('click',hide,true);
+})();
+function lgList(id,t){id=String(id);
+ if(t=='pm')return histOf(id).slice().reverse().map(([x,n])=>({x,n}));
+ const asc=kmOf(id).slice().sort((a,b)=>String(a[1]).localeCompare(String(b[1]))||String(a[0]).localeCompare(String(b[0])));
+ return asc.map((x,i)=>({x,d:i?(+x[5])-(+asc[i-1][5]):null,n:i+1})).reverse()}
+let lgM=today().slice(0,7);
+function lgMonth(id,v){lgM=v||'';dtTab(id,'km')}
+function dtTab(id,t,sel,mode){
+ const c=C[k],r=D.rows[k].find(x=>String(x[c.id])==String(id));if(!r)return;
+ id=String(id);const q=id.replace(/'/g,"\\'"),esc=x=>String(x==null?'':x).replace(/&/g,'&amp;').replace(/</g,'&lt;'),
+  empty=m=>`<div style="padding:40px 0;text-align:center;color:#64748b">${m}</div>`,fm=x=>(+x).toLocaleString('id-ID'),
+  km=kmOf(id),hp=histOf(id),L0=lgList(id,t),fl=t=='km'&&lgM,L=fl?L0.filter(o=>(pt(o.x[1])||'').slice(0,7)==lgM):L0,oi=new Map(L.map((o,j)=>[o,L0.indexOf(o)]));
+ const rowH=(o,i0)=>{const {x,d,n}=o,i=oi.get(o);
+  const isPM=t=='pm',tg=String(x[1]).slice(0,10),ac=isPM?x[6]:x[5],
+   main=isPM?`<span class="hn">${n}.</span><span>${fd(x[1])}</span><b>${esc(x[7]||x[5])}</b><span class="hk">${x[6]===''||x[6]==null?'—':fm(x[6])+' '+c.u}</span>`
+            :`<span class="hn">${n}.</span><span>${fd(x[1])}</span><b>${fm(x[5])} ${c.u}</b><span class="hk">${d==null?'awal':(d>=0?'+':'')+fm(d)}${x[6]?' · '+esc(x[6]):''}</span>`;
+  let extra='';
+  if(sel===i){
+   if(mode=='edit')extra=`<div style="display:flex;gap:6px;align-items:center;padding:6px 0 10px;flex-wrap:wrap"><input type="date" id="le_d" value="${tg}" style="flex:1;min-width:130px;width:auto"><input type="number" step="any" id="le_k" value="${ac===''||ac==null?'':ac}" style="width:105px"><button class="lk" onclick="lgSave('${q}','${t}',${i})">Simpan</button><button class="lk" onclick="dtTab('${q}','${t}',${i})">Batal</button></div>`;
+   else extra=`<div style="display:flex;gap:6px;padding:6px 0 10px"><button class="lk" onclick="dtTab('${q}','${t}',${i},'edit')">✎ Edit</button><button class="lk" style="color:#b91c1c;border-color:#fca5a5;background:#fff1f2" onclick="lgDel('${q}','${t}',${i})">🗑 Hapus</button></div>`}
+  return `<div${sel===i?` class="lgsel" data-id="${id.replace(/"/g,'&quot;')}" data-t="${t}" data-mode="${mode||'menu'}"`:''} style="${sel===i?'background:#fff7ed;margin:0 -10px;padding:0 10px':''}"><div class="hr" style="cursor:pointer" onclick="dtTab('${q}','${t}',${sel===i&&!mode?-1:i})">${main}</div>${extra}</div>`};
+ const body=L.length?L.map(rowH).join(''):empty(t=='pm'?'Belum ada riwayat PM':(fl&&L0.length?'Tidak ada riwayat KM pada bulan ini':'Belum ada riwayat KM'));
+ const mb=t=='km'?`<div style="display:flex;align-items:center;gap:8px;margin-top:10px"><span class="lbl">Bulan</span><input type="month" value="${lgM}" onchange="lgMonth('${q}',this.value)" style="width:150px;height:32px"><span class="cnt">${L.length} catatan${fl?' · total '+L0.length:''}</span></div>`:'';
+ const on='background:#d95a2b;color:#fff;border-color:#d95a2b',tb=(key,label,n)=>`<button class="lk" style="${t==key?on:''}" onclick="dtTab('${q}','${key}')">${label} (${n})</button>`;
+ $('#f').innerHTML=`<div class="hd"><div><b class="ft">${esc(id)}</b><div class="fs">${esc(r[c.tipe]||'—')}</div></div><span style="display:flex;gap:6px">${tb('km','Riwayat KM',km.length)}${tb('pm','History PM',hp.length)}</span></div>${mb}<div class="hs" style="height:auto;max-height:300px;min-height:150px;margin-top:10px">${body}</div><div style="font-size:11px;color:#94a3b8;margin-top:6px">Klik baris untuk edit atau hapus</div><div class="bar"><button class="big" onclick="$('#m').classList.remove('show')">Tutup</button></div>`;
+ $('#m').classList.add('show')}
+document.addEventListener('click',ev=>{
+ const m=document.getElementById('m');if(!m||!m.classList.contains('show'))return;
+ const sl=document.querySelector('#f .lgsel');if(!sl||sl.dataset.mode!=='menu')return;
+ const tg=ev.target;if(!tg||!tg.isConnected)return;
+ if(tg.closest('.lgsel')||tg.closest('.hr')||tg.closest('button')||tg.closest('input'))return;
+ dtTab(sl.dataset.id,sl.dataset.t)});
+function lgApply(t,x,op,nd,na,keep){
+ const kk=k,c=C[kk],isKM=t=='km',id=String(x[3]),row=D.rows[kk].find(r=>String(r[c.id])==id),arr=isKM?D.km:D.hist,r2=v=>Math.round(v*100)/100,
+  old=+(isKM?x[5]:x[6]),comp=isKM?null:x[5],
+  late=(fn)=>{let b=null;(arr||[]).forEach(e=>{if(e===x&&op=='del')return;if(String(e[3])!=id||e[2]!=SN[kk]||!fn(e))return;if(!b||String(e[1]).slice(0,10)>=String(b[1]).slice(0,10))b=e});return b};
+ if(op=='del'){const i=arr.indexOf(x);if(i>=0)arr.splice(i,1)}else{x[1]=nd;if(isKM)x[5]=na;else x[6]=na}
+ if(!keep)window._kmU=[];
+ if(!row)return;
+ const torAll=()=>c.tor.forEach((tt,j)=>{const n=num(row[c.nx[j]]),a=num(row[c.act]);row[tt]=n!=null&&a!=null?r2(n-a):''});
+ if(isKM){
+  if(num(row[c.act])===old){
+   if(op=='del'){const l=late(()=>true);if(l){row[c.act]=+l[5];row[c.tgl]=String(l[1]).slice(0,10)}}
+   else{row[c.act]=na;row[c.tgl]=nd}
+   torAll()}
+ }else{
+  const i=c.nm.indexOf(comp);
+  if(i>=0&&num(row[c.last[i]])===old){
+   if(op=='del'){const l=late(e=>e[5]==comp);row[c.last[i]]=l?+l[6]:''}else row[c.last[i]]=na;
+   c.tor.forEach((tt,jj)=>{const l=num(row[c.last[jj]]);row[c.nx[jj]]=l!=null?r2(l+ +D.cfg[c.w[jj]][1]):''});
+   torAll()}
+ }}
+function lgBody(t,x,extra){return Object.assign({key:k,src:t=='km'?'KM':'PM',id:String(x[3]),tgl:String(x[1]).slice(0,10),act:+(t=='km'?x[5]:x[6]),komp:t=='km'?'':x[5]},extra)}
+function lgDel(id,t,i){
+ const e=lgList(id,t)[i];if(!e)return;const x=e.x,fm=v=>(+v).toLocaleString('id-ID'),c=C[k],row=D.rows[k].find(r=>String(r[c.id])==String(id)),
+  act=+(t=='km'?x[5]:x[6]),cur=row&&(t=='km'?num(row[c.act])===act:num(row[c.last[c.nm.indexOf(x[5])]])===act);
+ if(!confirm('Hapus riwayat '+(t=='km'?'KM':'PM '+x[5])+' '+fm(act)+' '+c.u+'\n'+fd(x[1])+' · unit '+id+'?\n\nData juga dihapus di spreadsheet.'+(cur?'\n'+(t=='km'?'KM aktual unit kembali ke riwayat sebelumnya.':'Jadwal PM '+x[5]+' ikut menyesuaikan.'):'')))return;
+ const body=lgBody(t,x,{op:'logdel'});
+ lgApply(t,x,'del');draw();dtTab(id,t);enqueue(body)}
+function lgSave(id,t,i){
+ const e=lgList(id,t)[i];if(!e)return;const x=e.x,nd=$('#le_d').value,raw=String($('#le_k').value).trim().replace(',','.'),na=raw===''?NaN:Number(raw);
+ if(!/^\d{4}-\d\d-\d\d$/.test(nd)){alert('Tanggal belum diisi.');return}
+ if(!isFinite(na)||na<0){alert('Angka KM tidak valid.');return}
+ const act=+(t=='km'?x[5]:x[6]);if(nd==String(x[1]).slice(0,10)&&na===act){dtTab(id,t);return}
+ const body=lgBody(t,x,{op:'logedit',ntgl:nd,nact:na}),od=String(x[1]).slice(0,10);
+ lgApply(t,x,'edit',nd,na);undoPush({t:'edit',tt:t,x,id:String(id),od,oa:act,label:'edit riwayat '+(t=='km'?'KM':'PM')+' '+id});draw();dtTab(id,t);enqueue(body)}
 function showH(id){const c=C[k],a=histOf(id).reverse();
  $('#f').innerHTML=`<div class="hd"><div><b class="ft">History PM</b><div class="fs">${id}</div></div></div><div class="hs" style="height:auto;max-height:60vh;min-height:120px">${a.length?a.map(([x,n])=>`<div class="hr"><span class="hn">${n}.</span><span>${fd(x[1])}</span><b>${x[7]||x[5]}</b><span class="hk">${x[6]===''||x[6]==null?'—':(+x[6]).toLocaleString('id-ID')+' '+c.u}</span></div>`).join(''):'<div style="padding:40px 0;text-align:center;color:#64748b">Belum ada riwayat</div>'}</div><div class="bar"><button class="big on" onclick="openF('${id.replace(/'/g,"\\'")}')">Kembali</button></div>`}
+const kmOf=id=>(D.km||[]).filter(x=>String(x[3])==String(id)&&x[2]==SN[k]);
+function showKM(id){const c=C[k],q=String(id).replace(/'/g,"\\'"),asc=kmOf(id).slice().sort((a,b)=>String(a[1]).localeCompare(String(b[1]))||String(a[0]).localeCompare(String(b[0])));
+ const rows=asc.map((x,i)=>({x,d:i?(+x[5])-(+asc[i-1][5]):null,n:i+1})).reverse(),esc=t=>String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+ $('#f').innerHTML=`<div class="hd"><div><b class="ft">Riwayat Update KM</b><div class="fs">${esc(id)} · ${rows.length} catatan</div></div></div><div class="hs" style="height:auto;max-height:252px;min-height:120px">${rows.length?rows.map(({x,d,n})=>`<div class="hr"><span class="hn">${n}.</span><span>${fd(x[1])}</span><b>${(+x[5]).toLocaleString('id-ID')} ${c.u}</b><span class="hk">${d==null?'awal':(d>=0?'+':'')+d.toLocaleString('id-ID')}${x[6]?' · '+esc(x[6]):''}</span></div>`).join(''):'<div style="padding:40px 0;text-align:center;color:#64748b">Belum ada riwayat KM</div>'}</div><div class="bar"><button class="big on" onclick="openF('${q}')">Kembali</button></div>`}
+function kmNext(inp){const a=[...document.querySelectorAll('#t input.ki')];const n=a[a.indexOf(inp)+1];return n?n.dataset.id:''}
+function kmFocus(){const id=window._kmNx;window._kmNx='';if(!id)return;const el=[...document.querySelectorAll('#t input.ki')].find(x=>x.dataset.id===id);if(el){el.focus();el.select()}}
+function kmKey(ev,inp){if((ev.ctrlKey||ev.metaKey)&&!ev.shiftKey&&String(ev.key).toLowerCase()==='z'&&inp.value===inp.defaultValue&&(window._kmU||[]).length){ev.preventDefault();undoKM();return}
+ if(ev.key!=='Enter')return;ev.preventDefault();window._kmNx=kmNext(inp);if(inp.value===inp.defaultValue)kmFocus();else inp.blur()}
+/* batas kenaikan wajar per hari; ubah angka di sini kalau terlalu sensitif / terlalu longgar */
+const KM_MAX={KM:500,HM:24};
+function kmJump(kk,row,v){const c=C[kk],mx=KM_MAX[c.u],old=num(row[c.act]);if(!mx||old==null||!(v>old))return'';
+ const n=dAgo(row[c.tgl]),d=Math.max(1,n==null?1:n),up=v-old;if(up<=mx*d)return'';
+ const fm=x=>(+x).toLocaleString('id-ID');
+ return c.u+' '+row[c.id]+' naik terlalu tinggi dari '+fm(old)+' menjadi '+fm(v)+'\nPeriksa kembali, mungkin salah ketik.\nTetap simpan?'}
+function saveKM(inp){
+ const kk=k,c=C[kk],id=inp.dataset.id,row=D.rows[kk].find(x=>String(x[c.id])==id);if(!row)return;
+ const raw=inp.value.trim().replace(',','.'),v=raw===''?null:Number(raw),old=num(row[c.act]);
+ if(v==null||isNaN(v)){inp.value=inp.defaultValue;kmFocus();return}
+ if(v===old){kmFocus();return}
+ if(old!=null&&v<old&&!confirm('KM '+id+' turun dari '+old.toLocaleString('id-ID')+' menjadi '+v.toLocaleString('id-ID')+'.\nTetap simpan?')){inp.value=inp.defaultValue;kmFocus();return}
+ {const w=kmJump(kk,row,v);if(w&&!confirm(w)){inp.value=inp.defaultValue;kmFocus();return}}
+ const tgl=today(),note=row[c.note]==null?'':String(row[c.note]),r2=x=>Math.round(x*100)/100;
+ (window._kmU=window._kmU||[]).push({kk,id,old:row.slice(),nv:v});if(window._kmU.length>30)window._kmU.shift();
+ row[c.tgl]=tgl;row[c.act]=v;
+ c.tor.forEach((t,j)=>{const n=num(row[c.nx[j]]);row[t]=n!=null?r2(n-v):''});
+ (D.km=D.km||[]).push([new Date().toISOString(),tgl,SN[kk],id,row[c.tipe],v,note]);
+ window._kmCommit=1;try{draw()}finally{window._kmCommit=0}
+ kmFocus();
+ enqueue({key:kk,id,tgl,act:String(v),note,jenis:'',service:[]})}
+function pmAsk(id,j){
+ if(k=='AB'||k=='LV')return abAsk(id);
+ const c=C.DT,row=D.rows.DT.find(x=>String(x[c.id])==String(id));if(!row)return;
+ const act=num(row[c.act]);if(act==null){alert('Isi Actual KM unit '+id+' dulu.');return}
+ const n=dAgo(row[c.tgl]),nm=c.nm[j],q=String(id).replace(/'/g,"\\'"),t=String(id).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+ const v=num(row[c.tor[j]]),thr=+D.cfg[c.w[j]][2],fm=x=>(+x).toLocaleString('id-ID'),
+  box=(bg,bd,fg,tx)=>`<div style="margin-top:12px;padding:10px 12px;background:${bg};border:1px solid ${bd};border-radius:5px;font-size:14px;font-weight:700;color:${fg}">${tx}</div>`;
+ let st;
+ if(v==null)st=box('#f1f5f9','#cbd5e1','#334155','ℹ BELUM ADA DATA PM');
+ else if(v<0)st=box('#fee2e2','#fca5a5','#991b1b',`⛔ PM TERLAMBAT · lewat ${fm(-v)} KM`);
+ else if(v==0)st=box('#fee2e2','#fca5a5','#991b1b','⛔ WAKTUNYA PM · tepat jatuh tempo');
+ else if(v<=thr)st=box('#fef3c7','#fcd34d','#92400e',`⚠ SEGERA PM · sisa ${fm(v)} KM`);
+ else st=box('#dcfce7','#86efac','#166534',`✓ MASIH AMAN · sisa ${fm(v)} KM`);
+ $('#f').innerHTML=`<div class="hd"><div><b class="ft">Update PM ${nm}?</b><div class="fs">Unit ${t} · ${row[c.tipe]||'—'} · ${fm(act)} KM · ${fd(today())}</div></div></div>${st}${n!=null&&n>=2?`<div style="margin-top:8px;font-size:12px;color:#b45309">⚠ KM terakhir diperbarui ${n} hari lalu</div>`:''}<div class="bar"><button class="on big" onclick="pmSure('${q}',${j})">Ya, update PM</button><button class="big" onclick="$('#m').classList.remove('show')">Batal</button></div>`;
+ $('#m').classList.add('show')}
+function pmSure(id,j){
+ const c=C.DT,row=D.rows.DT.find(x=>String(x[c.id])==String(id));if(!row)return;
+ const act=num(row[c.act]);if(act==null){alert('Isi Actual KM unit '+id+' dulu.');return}
+ const nm=c.nm[j],q=String(id).replace(/'/g,"\\'"),t=String(id).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+ const v=num(row[c.tor[j]]),thr=+D.cfg[c.w[j]][2],fm=x=>(+x).toLocaleString('id-ID');
+ let sb,sf,stx;
+ if(v==null){sb='#e2e8f0';sf='#334155';stx='BELUM ADA DATA PM'}
+ else if(v<0){sb='#fecaca';sf='#991b1b';stx='SUDAH LEWAT · lewat '+fm(-v)+' KM'}
+ else if(v==0){sb='#fecaca';sf='#991b1b';stx='WAKTUNYA PM · jatuh tempo'}
+ else if(v<=thr){sb='#fde68a';sf='#92400e';stx='SEGERA PM · sisa '+fm(v)+' KM'}
+ else{sb='#bbf7d0';sf='#166534';stx='MASIH AMAN · sisa '+fm(v)+' KM'}
+ $('#f').innerHTML=`<div class="hd"><div><b class="ft">Yakin simpan PM ${nm}?</b></div></div><div style="margin-top:12px;padding:10px 14px;border:2px solid #d95a2b;border-radius:6px;background:#fff7ed;line-height:1.9">Unit: <b>${t}</b><br>Jenis PM: <b>PM ${nm}</b><br>KM: <b>${act.toLocaleString('id-ID')} KM</b><br>Tanggal: <b>${fd(today())}</b><br>Status: <span style="padding:2px 10px;border-radius:10px;background:${sb};color:${sf};font-weight:700;font-size:13px">${stx}</span></div><div class="bar"><button class="big" onclick="$('#m').classList.remove('show')">Batal</button><button id="pmok" class="on big" disabled style="opacity:.45" onclick="pmGo('${q}',${j})">Ya, simpan PM</button></div>`;
+ window._pmT=Date.now()+950;
+ setTimeout(()=>{const b=document.getElementById('pmok');if(b){b.disabled=false;b.style.opacity=1}},1000)}
+function pmGo(id,j){
+ if(Date.now()<(window._pmT||0))return;
+ const kk='DT',c=C.DT,row=D.rows.DT.find(x=>String(x[c.id])==String(id));if(!row)return;
+ const act=num(row[c.act]);if(act==null){alert('Isi Actual KM unit '+id+' dulu.');return}
+ id=String(id);$('#m').classList.remove('show');
+ const tgl=today(),note=row[c.note]==null?'':String(row[c.note]),nm=c.nm[j],jenis='PM '+nm,iso=new Date().toISOString(),r2=x=>Math.round(x*100)/100;
+ (window._kmU=window._kmU||[]).push({kk,id,old:row.slice(),nv:act,svc:j});if(window._kmU.length>30)window._kmU.shift();
+ row[c.tgl]=tgl;row[c.last[j]]=act;
+ c.tor.forEach((t,jj)=>{const l=num(row[c.last[jj]]);if(l!=null)row[c.nx[jj]]=r2(l+ +D.cfg[c.w[jj]][1]);const n=num(row[c.nx[jj]]);row[t]=n!=null?r2(n-act):''});
+ D.hist=D.hist||[];D.hist.push([iso,tgl,SN[kk],id,row[c.tipe],nm,act,jenis]);
+ (D.km=D.km||[]).push([iso,tgl,SN[kk],id,row[c.tipe],act,note]);
+ window._kmCommit=1;try{draw()}finally{window._kmCommit=0}
+ enqueue({key:kk,id,tgl,act:String(act),note,jenis,service:[j]})}
+function abSub(r,c,j){
+ const v=num(r[c.tor[j]]),n=pNext(k,r,c,String(r[c.id]),v==null?null:{n:c.nm[j],v});
+ return n&&n.t?`<div class="dt">${pEsc(n.t)}</div>`:''}
+function abAsk(id){
+ const kk=k,c=C[kk],row=D.rows[kk].find(x=>String(x[c.id])==String(id));if(!row)return;
+ const act=num(row[c.act]);if(act==null){alert('Isi Actual '+c.u+' unit '+id+' dulu.');return}
+ const fm=x=>(+x).toLocaleString('id-ID'),q=String(id).replace(/'/g,"\\'"),t=pEsc(id),
+  v=num(row[c.tor[0]]),thr=+D.cfg[c.w[0]][2],n=dAgo(row[c.tgl]),
+  sg=pNext(kk,row,c,String(id),v==null?null:{n:c.nm[0],v}),sgt=sg&&sg.t||'',
+  box=(bg,bd,fg,tx)=>`<div style="margin-top:12px;padding:10px 12px;background:${bg};border:1px solid ${bd};border-radius:5px;font-size:14px;font-weight:700;color:${fg}">${tx}</div>`;
+ let st;
+ if(v==null)st=box('#f1f5f9','#cbd5e1','#334155','ℹ BELUM ADA DATA PM');
+ else if(v<0)st=box('#fee2e2','#fca5a5','#991b1b',`⛔ PM TERLAMBAT · lewat ${fm(-v)} ${c.u}`);
+ else if(v==0)st=box('#fee2e2','#fca5a5','#991b1b','⛔ WAKTUNYA PM · tepat jatuh tempo');
+ else if(v<=thr)st=box('#fef3c7','#fcd34d','#92400e',`⚠ SEGERA PM · sisa ${fm(v)} ${c.u}`);
+ else st=box('#dcfce7','#86efac','#166534',`✓ MASIH AMAN · sisa ${fm(v)} ${c.u}`);
+ const seq=kk=='AB'?HEC.map(String):PM.LV.map((x,i)=>x.split(':')[0]+': '+((i+1)*5000).toLocaleString('id-ID')),
+  pos=sg&&sg.i!=null?sg.i:-1;
+ $('#f').innerHTML=`<div class="hd"><div><b class="ft">Update PM ${t}</b><div class="fs">${pEsc(row[c.tipe]||'—')} · ${fm(act)} ${c.u} · ${fd(today())}</div></div></div>${st}${n!=null&&n>=2?`<div style="margin-top:8px;font-size:12px;color:#b45309">⚠ ${c.u} terakhir diperbarui ${n} hari lalu</div>`:''}
+ <label>Jenis PM</label><select id="abj"><option value="">— Pilih —</option>${PM[kk].map(x=>`<option${sgt&&(x==sgt||x.startsWith(sgt+':'))?' selected':''}>${x}</option>`).join('')}</select>
+ <div style="margin-top:10px;padding:8px 10px;background:#f6f7f9;border:1px solid var(--ln);border-radius:4px;font-size:12px;line-height:1.7;color:#475569"><b style="color:var(--tx)">Urutan PM ${kk=='AB'?'alat':'LV'}:</b> ${seq.map((x,i)=>`<span onclick="pmSetPos('${q}',${i})" title="Klik: jadikan ini PM berikutnya" style="display:inline-block;white-space:nowrap;cursor:pointer;padding:0 5px;border-radius:3px;${i===pos?'background:#d95a2b;color:#fff;font-weight:700':'border:1px solid transparent'}">${x}</span>`).join(' → ')} <span style="color:var(--mu)">→ ulang</span><div style="font-size:11px;color:var(--mu);margin-top:3px">Klik urutan untuk mengubah PM berikutnya unit ini (dipakai di Plan PM).${sg&&sg.o?' <a href="#" onclick="pmResetPos(\''+q+'\');return false" style="color:#b2431f;font-weight:600">Kembalikan otomatis</a>':''}</div></div>
+ <div class="bar"><button class="on big" onclick="abSure('${q}')">Lanjut</button><button class="big" onclick="$('#m').classList.remove('show')">Batal</button></div>`;
+ $('#m').classList.add('show')}
+function abSure(id){
+ const jn=($('#abj')||{}).value;if(!jn){alert('Pilih jenis PM dulu.');return}
+ const kk=k,c=C[kk],row=D.rows[kk].find(x=>String(x[c.id])==String(id));if(!row)return;
+ const act=num(row[c.act]),q=String(id).replace(/'/g,"\\'"),jq=jn.replace(/'/g,"\\'");
+ const v=num(row[c.tor[0]]),thr=+D.cfg[c.w[0]][2],fm=x=>(+x).toLocaleString('id-ID');
+ let sb,sf,stx;
+ if(v==null){sb='#e2e8f0';sf='#334155';stx='BELUM ADA DATA PM'}
+ else if(v<0){sb='#fecaca';sf='#991b1b';stx='SUDAH LEWAT · lewat '+fm(-v)+' '+c.u}
+ else if(v==0){sb='#fecaca';sf='#991b1b';stx='WAKTUNYA PM · jatuh tempo'}
+ else if(v<=thr){sb='#fde68a';sf='#92400e';stx='SEGERA PM · sisa '+fm(v)+' '+c.u}
+ else{sb='#bbf7d0';sf='#166534';stx='MASIH AMAN · sisa '+fm(v)+' '+c.u}
+ $('#f').innerHTML=`<div class="hd"><div><b class="ft">Yakin simpan ${pEsc(jn.split(':')[0])}?</b></div></div><div style="margin-top:12px;padding:10px 14px;border:2px solid #d95a2b;border-radius:6px;background:#fff7ed;line-height:1.9">Unit: <b>${pEsc(id)}</b><br>Jenis PM: <b>${pEsc(jn)}</b><br>${c.u}: <b>${act.toLocaleString('id-ID')} ${c.u}</b><br>Tanggal: <b>${fd(today())}</b><br>Status: <span style="padding:2px 10px;border-radius:10px;background:${sb};color:${sf};font-weight:700;font-size:13px">${stx}</span></div><div class="bar"><button class="big" onclick="$('#m').classList.remove('show')">Batal</button><button id="pmok" class="on big" disabled style="opacity:.45" onclick="abGo('${q}','${jq}')">Ya, simpan PM</button></div>`;
+ window._pmT=Date.now()+950;
+ setTimeout(()=>{const b=document.getElementById('pmok');if(b){b.disabled=false;b.style.opacity=1}},1000)}
+function pmSetPos(id,i){PMO[k+'|'+id]={i,d:today()};pmoSave();draw();abAsk(id)}
+function pmResetPos(id){delete PMO[k+'|'+id];pmoSave();draw();abAsk(id)}
+function abGo(id,jenis){
+ if(Date.now()<(window._pmT||0))return;
+ const kk=k,c=C[kk],row=D.rows[kk].find(x=>String(x[c.id])==String(id));if(!row)return;
+ const act=num(row[c.act]);if(act==null)return;
+ id=String(id);$('#m').classList.remove('show');delete PMO[kk+'|'+id];pmoSave();
+ const tgl=today(),note=row[c.note]==null?'':String(row[c.note]),iso=new Date().toISOString(),r2=x=>Math.round(x*100)/100;
+ undoPush({kk,id,old:row.slice(),nv:act,svc:0});
+ row[c.tgl]=tgl;row[c.last[0]]=act;
+ c.tor.forEach((t,jj)=>{const l=num(row[c.last[jj]]);if(l!=null)row[c.nx[jj]]=r2(l+ +D.cfg[c.w[jj]][1]);const n=num(row[c.nx[jj]]);row[t]=n!=null?r2(n-act):''});
+ (D.hist=D.hist||[]).push([iso,tgl,SN[kk],id,row[c.tipe],c.nm[0],act,jenis]);
+ (D.km=D.km||[]).push([iso,tgl,SN[kk],id,row[c.tipe],act,note]);
+ window._kmCommit=1;try{draw()}finally{window._kmCommit=0}
+ enqueue({key:kk,id,tgl,act:String(act),note,jenis,service:[0]})}
+function undoPush(u){(window._kmU=window._kmU||[]).push(u);if(window._kmU.length>30)window._kmU.shift()}
+function undoLabel(u){if(u.t)return u.label;const c2=C[u.kk],oa=u.old[c2.act];return u.svc!=null?'batalkan PM '+c2.nm[u.svc]+' '+u.id:u.id+' ke '+(oa===''||oa==null?'kosong':(+oa).toLocaleString('id-ID'))}
+function undoBtn(){const u=(window._kmU||[]).slice(-1)[0];return u?`<button class="lk" style="margin-left:8px" onclick="undoKM()" title="Batalkan aksi terakhir (Ctrl+Z)">↶ Kembali: ${undoLabel(u)}</button>`:''}
+function undoPlan(u){PL=JSON.parse(u.snap);pSave();draw()}
+function undoEdit(u){const x=u.x,arr=u.tt=='km'?D.km:D.hist;
+ if(!(arr||[]).includes(x)){alert('Riwayat sudah berubah (data dimuat ulang), edit ini tidak bisa dibatalkan.');return}
+ const body=lgBody(u.tt,x,{op:'logedit',ntgl:u.od,nact:u.oa});
+ lgApply(u.tt,x,'edit',u.od,u.oa,1);draw();
+ const ft=document.querySelector('#f .ft');if((k=='DT'||k=='AB'||k=='LV')&&ft&&ft.textContent==u.id&&document.querySelector('#m.show'))dtTab(u.id,u.tt);
+ enqueue(body)}
+function undoKM(){
+ const u=(window._kmU||[]).pop();if(!u)return;
+ if(u.t=='plan')return undoPlan(u);if(u.t=='edit')return undoEdit(u);
+ const c=C[u.kk],row=D.rows[u.kk].find(x=>String(x[c.id])==u.id);if(!row)return;
+ u.old.forEach((x,i)=>{row[i]=x});
+ const Lg=D.km||[];for(let i=Lg.length-1;i>=0;i--){const x=Lg[i];if(String(x[3])==u.id&&x[2]==SN[u.kk]&&+x[5]===u.nv){Lg.splice(i,1);break}}
+ if(u.svc!=null){const Hg=D.hist||[],cn=c.nm[u.svc];for(let i=Hg.length-1;i>=0;i--){const x=Hg[i];if(String(x[3])==u.id&&x[2]==SN[u.kk]&&x[5]==cn&&+x[6]===u.nv){Hg.splice(i,1);break}}}
+ draw();
+ const oa=num(u.old[c.act]);
+ enqueue({key:u.kk,id:u.id,tgl:String(u.old[c.tgl]||'').slice(0,10),act:oa==null?'':String(oa),note:u.old[c.note]==null?'':String(u.old[c.note]),jenis:'',service:[],undo:1,undoAct:u.nv,undoSvc:u.svc!=null?[u.svc]:[],restoreLast:u.svc!=null?{[u.svc]:(u.old[c.last[u.svc]]==null?'':u.old[c.last[u.svc]])}:{}})}
+document.addEventListener('keydown',ev=>{if((ev.ctrlKey||ev.metaKey)&&!ev.shiftKey&&String(ev.key).toLowerCase()==='z'){const t=ev.target;if(t&&(t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.isContentEditable))return;if((window._kmU||[]).length){ev.preventDefault();undoKM()}}});
 const autoH=t=>{t.style.height='auto';t.style.height=Math.min(Math.max(t.scrollHeight,38),120)+'px'};
 function openD(id,r,c,dy){const q=id.replace(/'/g,"\\'");
  $('#f').innerHTML=`<div class="hd"><div><b class="ft">${id}</b><div class="fs">${r[c.tipe]||'—'} · Interval ${dy.iv==null?'—':dy.iv} Hari</div></div><button class="lk" onclick="showH('${q}')">History (${histOf(id).length})</button></div><label>Tanggal PM dilakukan</label><input type="date" id="fd" value="${today()}">
@@ -369,7 +624,8 @@ async function saveDay(id){
  D.hist=D.hist||[];D.hist.push([new Date().toISOString(),tgl,SN[kk],id,row[c.tipe],c.nm[0],'','PM HARI']);draw();
  enqueue({key:kk,id,hari:1,tgl,note,jenis:'PM HARI'})}
 function openF(id){const c=C[k],r=D.rows[k].find(x=>String(x[c.id])==id);{const dy=dayInfo(r,c);if(dy)return openD(id,r,c,dy)}
- $('#f').innerHTML=`<div class="hd"><div><b class="ft">${id}</b><div class="fs">${r[c.tipe]||'—'}</div></div><button class="lk" onclick="showH('${id.replace(/'/g,"\\'")}')">History (${histOf(id).length})</button></div><label>Tanggal update</label><input type="date" id="fd" value="${today()}">
+ if(k=='DT'||k=='AB'||k=='LV'){lgM=today().slice(0,7);return dtTab(id,'km')}
+ $('#f').innerHTML=`<div class="hd"><div><b class="ft">${id}</b><div class="fs">${r[c.tipe]||'—'}</div></div><span style="display:flex;gap:6px"><button class="lk" onclick="showH('${id.replace(/'/g,"\\'")}')">History (${histOf(id).length})</button><button class="lk" data-i="${id}" onclick="showKM(this.dataset.i)">Riwayat KM (${kmOf(id).length})</button></span></div><label>Tanggal update</label><input type="date" id="fd" value="${today()}">
  <label>Actual (${c.u})</label><input type="number" step="any" id="fa" value="${r[c.act]}">
  <label>Catatan</label><textarea id="fn" rows="1" oninput="autoH(this)">${String(r[c.note]).replace(/&/g,'&amp;').replace(/</g,'&lt;')}</textarea>
  ${jenisHTML(id)}
@@ -386,16 +642,18 @@ async function save(id){
  if(kk=='DT')body.service=body.jenis?[C.DT.nm.indexOf(body.jenis.replace('PM ',''))]:[];
  if(kk=='AB')body.service=body.jenis?[0]:[];
  if(body.service.length&&body.act==='')return alert('Isi Actual dulu.');
+ {const r1=D.rows[kk].find(x=>String(x[c.id])==String(id)),v1=+body.act;if(r1&&body.act!==''&&!isNaN(v1)){const w=kmJump(kk,r1,v1);if(w&&!confirm(w))return}}
  // tampilkan hasil langsung di layar, simpan ke sheet di latar belakang
  $('#m').classList.remove('show');
  const row=D.rows[kk].find(x=>String(x[c.id])==String(id)),old=row&&row.slice(),r2=v=>Math.round(v*100)/100;let hs=[];
  if(row){
+  if(body.act!==''&&body.service.length<=1)undoPush({kk,id:String(id),old,nv:+body.act,svc:body.service.length?body.service[0]:null});
   row[c.tgl]=body.tgl;if(body.act!=='')row[c.act]=+body.act;row[c.note]=body.note;
   body.service.forEach(i=>{row[c.last[i]]=+body.act});
   c.tor.forEach((t,j)=>{const l=num(row[c.last[j]]);if(l!=null)row[c.nx[j]]=r2(l+ +D.cfg[c.w[j]][1]);
    const n=num(row[c.nx[j]]),a=num(row[c.act]);row[t]=n!=null&&a!=null?r2(n-a):''});
   D.hist=D.hist||[];hs=body.service.map(i=>[new Date().toISOString(),body.tgl,SN[kk],id,row[c.tipe],c.nm[i],+body.act,body.jenis||(c.nm.length>1?'PM '+c.nm[i]:'')]);
-  D.hist.push(...hs);draw()}
+  D.hist.push(...hs);if(body.act!=='')(D.km=D.km||[]).push([new Date().toISOString(),body.tgl,SN[kk],id,row[c.tipe],+body.act,body.note]);draw()}
  enqueue(body)}
 
 /* ===== CHECKLIST PM: klik baris di History PM ===== */
