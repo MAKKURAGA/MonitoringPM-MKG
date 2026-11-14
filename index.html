@@ -145,6 +145,8 @@ td.empty{padding:40px;height:auto;color:var(--mu);text-align:center}
 .clg label{margin-top:0}
 .cll{font-size:11px;color:var(--mu);margin:2px 0}
 .net{font-size:12px;font-weight:600;padding:5px 10px;border:1px solid var(--ln);border-radius:4px;white-space:nowrap;background:#fff}.net.on{color:#157347}.net.off{color:#b45309;background:#fffbeb;border-color:#fcd34d}.net.sy{color:#1d4ed8}
+.pbn{height:32px;border:1px solid var(--ln2);border-radius:6px;background:#fff;padding:0 16px;color:#374151;cursor:pointer}.pbn.on{background:var(--acbg);color:#b2431f;font-weight:600;border-color:#f0b49f}
+#t.plan th,#t.plan td{padding-left:20px;padding-right:20px}#t.plan td{height:56px}
 </style></head><body>
 <div id="app"><aside><div class="brand"><img class="logo" id="lg" alt="Logo Makkuraga Grup"><div><h1>PM MONITORING</h1><div class="tag">Makkuraga Grup</div></div></div><nav id="tabs"></nav></aside><main><div class="top"><div class="tl"><button id="mt" title="Perkecil / perbesar menu" onclick="document.body.classList.toggle('mini');try{localStorage.setItem('pmMini',document.body.classList.contains('mini')?'1':'')}catch(e){}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button><div id="ttl"></div></div><div class="tools"><input id="q" placeholder="Cari ID / tipe / lokasi" oninput="draw()"><span id="net" class="net"></span><button id="png" onclick="exportPNG()" title="Unduh gambar HD unit yang jadwal PM sudah lewat (Overdue) untuk dikirim ke grup WA">Unduh PNG</button><button id="rf" onclick="refreshNow()">Refresh</button></div></div><div id="cards"></div><div id="upd"></div><div class="w"><table id="t"></table></div></main></div>
 <div id="m"><div id="f"></div></div>
@@ -190,11 +192,14 @@ LV:{id:0,tipe:1,lok:2,tgl:3,act:5,note:8,tor:[4],nm:['SERVIS'],last:[6],nx:[7],w
 AB:{tipe:0,id:1,lok:2,tgl:3,act:5,note:8,tor:[4],nm:['SERVIS'],last:[6],nx:[7],w:[5],u:'HM'},
 HR:{tipe:1,id:0,lok:2,tgl:3,act:4,last:[5],tor:[6],nx:[5],note:7,nm:['Jadwal PM'],w:[],u:'Hari'}};
 const T={AB:'Heavy Equipment',DT:'Dump Truck',LV:'LV & Equipment',HR:'Mesin Las & Kompresor',P:'Plan PM',H:'History PM'},SN={DT:'PM DUMP TRUCK',LV:'PM LV & PERALATAN',AB:'PM ALAT BERAT',HR:'PM LAS & KOMPRESOR'},LB=['NO DATA','NOT DUE','DUE SOON','OVERDUE'],CL=['#475569','#22c55e','#facc15','#ef4444'];
+/* Merah bila sisa To Run <= ambang: DT 150, HE(AB) 50, LV 150 */
+const RED_AT={DT:150,AB:50,LV:150},kOf=c=>Object.keys(C).find(x=>C[x]===c),
+ zc=(v,c,j)=>{if(v==null)return 0;const r=RED_AT[kOf(c)];if(r!=null&&v<=r)return 3;return v<=0?3:v<=D.cfg[c.w[j]][2]?2:1};
 let D,k='P',f=-1;const $=s=>document.querySelector(s),num=v=>v===''||v==null||isNaN(+v)?null:+v;
 const addDays=(p,n)=>new Date(Date.parse(p)+n*864e5).toISOString().slice(0,10),daysTo=p=>Math.round((Date.parse(p)-Date.parse(today()))/864e5);
 const dUpd=d=>`<td><span class="bd b0">${d.last?fd(d.last):'—'}</span><div class="dt">Interval ${d.iv==null?'—':d.iv} Hari</div></td><td class="n">${d.el==null?'<span class="nil">—</span>':d.el+' Hari'}</td>`,
  dCells=d=>`<td class="gl n z${d.s}">${d.left==null?'–':d.left+' Hari'}</td><td class="n">${d.next?fd(d.next):'<span class="nil">—</span>'}</td>`;
-function st(r,c){const dy=dayInfo(r,c);if(dy)return dy.s;const x=c.tor.map((i,j)=>{const v=num(r[i]);return v==null?null:v<=0?3:v<=D.cfg[c.w[j]][2]?2:1}).filter(a=>a!=null);return x.length?Math.max(...x):0}
+function st(r,c){const dy=dayInfo(r,c);if(dy)return dy.s;const x=c.tor.map((i,j)=>{const v=num(r[i]);return v==null?null:zc(v,c,j)}).filter(a=>a!=null);return x.length?Math.max(...x):0}
 let pend=0;
 async function load(silent,fresh){
  const b=()=>document.getElementById('rf');
@@ -218,7 +223,7 @@ async function load_(silent,fresh){
   $('#t').innerHTML='<tr><td style="padding:24px;color:#b91c1c;line-height:1.6">'+why+'</td></tr>'}}
 function draw(){
  {const ae=document.activeElement;if(!window._kmCommit&&ae&&ae.classList&&ae.classList.contains('ki')&&ae.value!==ae.defaultValue)return}
- const c=C[k],q=$('#q').value.toLowerCase();
+ const c=C[k],q=$('#q').value.toLowerCase();$('#t').classList.toggle('plan',k=='P');
  $('#tabs').innerHTML=Object.keys(T).map(x=>`<button class="${x==k?'on':''}" onclick="k='${x}';f=-1;uf='';draw()" title="${T[x]}"><b class="ni">${{DT:'DT',LV:'LV',AB:'AB',HR:'LK',P:'PL',H:'PM'}[x]}</b><span class="nl">${T[x]}</span></button>`).join('');$('#ttl').innerHTML=(k=='H'?'':'<span class="t1">Preventive Maintenance</span>')+'<span class="t2">'+T[k]+'</span>';
  {const pb=$('#png');if(pb)pb.style.display=(k=='H')?'none':''}
  if(k=='H')return drawH(q);
@@ -232,7 +237,7 @@ function draw(){
  const esc=v=>String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;'),e=v=>v===''||v==null?'<span class="nil">—</span>':v,ng=c.nm.length;
  const head='<thead><tr>'+['Tipe','ID Unit','Lokasi','Update '+c.u,'Actual '+c.u].map((x,i)=>`<th rowspan="2"${i==4?' class="n"':''}>${x}</th>`).join('')+c.nm.map(x=>`<th colspan="2" class="g gl">${x}</th>`).join('')+'<th rowspan="2" class="gl">Catatan</th><th rowspan="2">Status</th></tr><tr>'+c.nm.map(()=>'<th class="sub gl n">To Run</th><th class="sub n">Next</th>').join('')+'</tr></thead>';
  const body=rows.map(({r,s})=>{const dy=dayInfo(r,c);return `<tr><td>${e(r[c.tipe])}</td><td class="idc" onclick="openF('${String(r[c.id]).replace(/'/g,"\\'")}')" title="Klik untuk riwayat KM / History PM"><b>${r[c.id]}</b></td><td>${e(r[c.lok])}</td>${dy?dUpd(dy):`<td>${ub(r[c.tgl])}</td><td class="n" style="text-align:center" onclick="event.stopPropagation()"><input class="ki" type="number" step="any" inputmode="decimal" placeholder="—" data-id="${esc(r[c.id]).replace(/"/g,'&quot;')}" value="${esc(r[c.act])}" onfocus="this.select()" onkeydown="kmKey(event,this)" onchange="saveKM(this)"></td>`}`+
-  (dy?dCells(dy):c.tor.map((t,j)=>{const v=num(r[t]);const z=v==null?0:v<=0?3:v<=D.cfg[c.w[j]][2]?2:1;
+  (dy?dCells(dy):c.tor.map((t,j)=>{const v=num(r[t]);const z=zc(v,c,j);
    const pa=(k=='DT'||k=='AB'||k=='LV')?` pmc" onclick="event.stopPropagation();pmAsk('${String(r[c.id]).replace(/'/g,"\\'")}',${j})" data-hid="${encodeURIComponent(String(r[c.id]))}" data-hj="${j}`:'';
    return`<td class="gl n z${z}${pa}">${v==null?'–':v}${k=='AB'||k=='LV'?abSub(r,c,j):''}</td><td class="n">${e(r[c.nx[j]])}</td>`}).join(''))+
   `<td class="nt">${e(esc(r[c.note]))}</td><td class="sc p${s}">${LB[s]}</td></tr>`}).join('');
@@ -268,7 +273,8 @@ function drawHR(q){
  $('#upd').insertAdjacentHTML('beforeend',`<span class="cnt">${rows.length} unit</span>`)}
 
 /* ===== PLAN PM ===== */
-let pv='',psel=new Set(),pall=false,pdate='',pcat='',PL=[];
+let pv='',psel=new Set(),pall=false,pdate='',pcat='',psh='',PL=[];
+const PO=['AB','DT','LV','HR'];
 try{PL=JSON.parse(localStorage.getItem('pmPlan')||'[]')}catch(e){}
 const pSave=()=>{try{localStorage.setItem('pmPlan',JSON.stringify(PL))}catch(e){}};
 const pSnap=label=>undoPush({t:'plan',snap:JSON.stringify(PL),label});
@@ -301,10 +307,15 @@ function pCands(){const out=[];PK.forEach(kk=>{const c=C[kk];((D.rows||{})[kk]||
  out.push({kk,key:kk+'|'+id,id,tipe:r[c.tipe]||'',lok:r[c.lok]||'',act:dy?(dy.el==null?'':dy.el+' Hari'):r[c.act],s:st(r,c),best,u:c.u,nx:pNext(kk,r,c,id,best)})})});return out}
 const pDone=x=>(D.hist||[]).some(h=>String(h[3])==x.id&&h[2]==SN[x.kk]&&(pt(h[1])||'')>=x.cr);
 const pEsc=v=>String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;');
-const pRun=b=>!b?'<span class="nil">—</span>':b.v<=0?`<b style="color:#b42318">${b.n}: Lewat ${(-b.v).toLocaleString('id-ID')} ${b.u}</b>`:`${b.n}: <b>${b.v.toLocaleString('id-ID')}</b> ${b.u}`;
+const pRun=(b,kk)=>{if(!b)return '<span class="nil">—</span>';const fv=v=>v.toLocaleString('id-ID'),r=RED_AT[kk],
+ w='<div style="font-size:11px;color:#b42318;font-weight:600">Waktunya PM</div>',rd=t=>`<b style="color:#b42318">${b.n}: ${t}</b>${w}`;
+ if(b.v<0)return rd('Lewat '+fv(-b.v)+' '+b.u);
+ if(b.v==0)return rd(b.u=='Hari'?'Hari ini':'0 '+b.u);
+ if(r!=null&&b.u!='Hari'&&b.v<=r)return rd(fv(b.v)+' '+b.u);
+ return `${b.n}: <b>${fv(b.v)}</b> ${b.u}<div style="font-size:11px;color:#8a5a00;font-weight:600">Mendekati jadwal PM</div>`};
 function pTog(key,on){on?psel.add(key):psel.delete(key);const b=$('#pcnt');if(b)b.textContent='Tambah ke Plan ('+psel.size+')'}
 function pPick(){const tk=($('#pid').value||'').split(/[\s,;]+/).filter(Boolean),all=pCands(),miss=[];
- tk.forEach(t=>{const m=all.filter(x=>x.id.toLowerCase()==t.toLowerCase());m.length?m.forEach(x=>psel.add(x.key)):miss.push(t)});
+ tk.forEach(t=>{const m=all.filter(x=>x.id.toLowerCase()==t.toLowerCase());m.length?(m.forEach(x=>psel.add(x.key)),psh=m[0].kk):miss.push(t)});
  if(miss.length)alert('ID tidak ditemukan: '+miss.join(', '));pcat='';draw()}
 function pAdd(){const d=$('#pdt').value;if(!psel.size)return alert('Pilih unit dulu.');if(!d)return alert('Isi tanggal plan.');
  pSnap('tambah '+psel.size+' unit ke plan');psel.forEach(key=>{const [kk,id]=key.split('|');if(!PL.some(x=>x.kk==kk&&x.id==id&&!pDone(x)))PL.push({kk,id,cr:today(),tgl:d})});
@@ -312,35 +323,47 @@ function pAdd(){const d=$('#pdt').value;if(!psel.size)return alert('Pilih unit d
 function pDate(i,v){if(v){pSnap('ubah tanggal plan '+PL[i].id);PL[i].tgl=v;pSave();draw()}}
 function pDel(i){if(confirm('Hapus unit '+PL[i].id+' dari plan?')){pSnap('hapus '+PL[i].id+' dari plan');PL.splice(i,1);pSave();draw()}}
 function pClean(){const n=PL.filter(pDone).length;if(!n)return alert('Belum ada plan yang selesai.');if(confirm('Hapus '+n+' plan yang sudah selesai?')){pSnap('bersihkan '+n+' plan selesai');PL=PL.filter(x=>!pDone(x));pSave();draw()}}
-function pCopy(){const by={},all=pCands();PL.filter(x=>!pDone(x)).forEach(x=>{(by[x.tgl]=by[x.tgl]||[]).push(x)});
- const ds=Object.keys(by).sort();if(!ds.length)return alert('Belum ada rencana.');
- let t='*RENCANA PM*\n';ds.forEach(d=>{t+='\n*'+hr(d)+'*\n';by[d].forEach((x,i)=>{const u=all.find(a=>a.key==x.kk+'|'+x.id)||{};
-  t+=(i+1)+'. '+x.id+(u.tipe?' ('+u.tipe+')':'')+(u.best?' – '+u.best.n+' '+(u.best.v<=0?'Lewat '+(-u.best.v)+' '+u.best.u:u.best.v+' '+u.best.u+' lagi'):'')+(u.nx&&u.nx.t?' → '+u.nx.t+(u.nx.sub?' ('+u.nx.sub.toLowerCase()+')':''):'')+'\n'})});
+function pCopy(){const all=pCands(),by={},pl=PL.filter(x=>!pDone(x));pl.forEach(x=>{(by[x.tgl]=by[x.tgl]||[]).push(x)});
+ const reds=all.filter(x=>x.s==3&&!pl.some(p=>p.kk==x.kk&&p.id==x.id)).sort((a,b)=>(a.best?a.best.v:1e9)-(b.best?b.best.v:1e9));
+ const ds=Object.keys(by).sort();if(!ds.length&&!reds.length)return alert('Belum ada rencana.');
+ const ln=(x,i,u)=>(i+1)+'. '+x.id+(u.tipe?' ('+u.tipe+')':'')+(u.best?' – '+u.best.n+' '+(u.best.v<=0?'Lewat '+(-u.best.v)+' '+u.best.u:u.best.v+' '+u.best.u+' lagi'):'')+(u.nx&&u.nx.t?' → '+u.nx.t+(u.nx.sub?' ('+u.nx.sub.toLowerCase()+')':''):'')+'\n';
+ let t='*RENCANA PM*\n';
+ if(reds.length){t+='\n*PERLU PM SEKARANG*\n';PO.forEach(k2=>{const a=reds.filter(x=>x.kk==k2);if(a.length){t+='_'+PCAT[k2]+'_\n';a.forEach((x,i)=>{t+=ln(x,i,x)})}})}
+ ds.forEach(d=>{t+='\n*'+hr(d)+'*\n';by[d].forEach((x,i)=>{t+=ln(x,i,all.find(a=>a.key==x.kk+'|'+x.id)||{})})});
  const ok=()=>alert('Rencana tersalin. Tinggal tempel di grup.');
  (navigator.clipboard?navigator.clipboard.writeText(t).then(ok):Promise.reject()).catch(()=>prompt('Salin manual:',t))}
 function drawP(q){
  $('#cards').innerHTML='';
  const all=pCands(),pend2=PL.map((x,i)=>({...x,i})).filter(x=>!pDone(x)),dn=PL.map((x,i)=>({...x,i})).filter(pDone);
- if(!pv)pv=pend2.length?'R':'K';
- const planned=new Set(pend2.map(x=>x.kk+'|'+x.id)),seg=[['R','Rencana ('+pend2.length+')'],['K','Pilih Unit']].map(([v,l])=>`<button class="${pv==v?'on':''}" onclick="pv='${v}';draw()">${l}</button>`).join('');
- const base=pv=='K'?all.filter(x=>x.s>=2||psel.has(x.key)):[...pend2,...dn],cc=k2=>base.filter(x=>x.kk==k2).length,
-  catSel=`<select class="hf" onchange="pcat=this.value;draw()" title="Filter sheet"><option value="">Semua sheet (${base.length})</option>${PK.map(k2=>`<option value="${k2}"${pcat==k2?' selected':''}>${PCAT[k2]} (${cc(k2)})</option>`).join('')}</select>`;
- const ctl=pv=='K'?`${catSel}<input id="pid" style="width:250px"><button onclick="pPick()">Pilih</button><span style="display:flex;gap:8px;margin-left:auto"><input type="date" id="pdt" value="${pdate||today()}" onchange="pdate=this.value"><button id="pcnt" class="on" onclick="pAdd()">Tambah ke Plan (${psel.size})</button></span>`
-  :`${catSel}<span style="display:flex;gap:8px;margin-left:auto"><button onclick="pClean()">Bersihkan yang selesai</button><button class="on" onclick="pCopy()">Salin untuk WhatsApp</button></span>`;
- $('#upd').innerHTML=`<span class="lbl">Maintenance Plan</span><div class="seg">${seg}</div>${ctl}`;$('#upd').insertAdjacentHTML('beforeend',undoBtn());
- const th=h=>'<thead><tr>'+h.map(x=>`<th>${x}</th>`).join('')+'</tr></thead>',em=(n,m)=>`<tr><td class="empty" colspan="${n}">${m}</td></tr>`;
+ if(pv!='K')pv='R';
+ const planned=new Set(pend2.map(x=>x.kk+'|'+x.id)),
+  reds=all.filter(x=>x.s==3&&!planned.has(x.key)),yel=all.filter(x=>x.s==2&&!planned.has(x.key)),
+  base=pv=='K'?all.filter(x=>x.s==2||psel.has(x.key)):[...reds,...pend2,...dn],cc=k2=>base.filter(x=>x.kk==k2).length;
+ if(psh&&!PO.includes(psh))psh='';
+ const btn=(v,l)=>`<button class="pbn${pv==v?' on':''}" onclick="pv='${v}';draw()">${l}</button>`,
+  seg=`<div style="display:flex;gap:10px">${btn('R','Rencana ('+(reds.length+pend2.length)+')')}${btn('K','Due Soon ('+yel.length+')')}</div>`,
+  catSel=`<select class="hf" style="height:32px;min-width:230px" onchange="psh=this.value;draw()" title="Pilih sheet"><option value=""${psh?'':' selected'}>Semua sheet (${base.length})</option>${PO.map(k2=>`<option value="${k2}"${psh==k2?' selected':''}>${PCAT[k2]} (${cc(k2)})</option>`).join('')}</select>`,
+  ctl=pv=='K'?`<span style="display:flex;gap:10px;margin-left:auto"><input type="date" id="pdt" value="${pdate||today()}" onchange="pdate=this.value"><button id="pcnt" class="on" onclick="pAdd()">Tambah ke Plan (${psel.size})</button></span>`
+   :`<span style="display:flex;gap:10px;margin-left:auto"><button onclick="pClean()">Bersihkan yang selesai</button><button class="on" onclick="pCopy()">Salin untuk WhatsApp</button></span>`;
+ $('#upd').innerHTML=`<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;width:100%;padding-bottom:14px"><span class="lbl">Maintenance Plan</span>${seg}${catSel}${ctl}</div>`;$('#upd').insertAdjacentHTML('beforeend',undoBtn());
+ const th=h=>'<thead><tr>'+h.map(x=>`<th>${x}</th>`).join('')+'</tr></thead>',em=(n,m)=>`<tr><td class="empty" colspan="${n}">${m}</td></tr>`,
+  urg=(a,b)=>(PO.indexOf(a.kk)-PO.indexOf(b.kk))||((a.best?a.best.v:1e9)-(b.best?b.best.v:1e9)),
+  idc=x=>`<td><b>${pEsc(x.id)}</b>${psh?'':`<div style="font-size:11px;color:var(--mu)">${PCAT[x.kk]}</div>`}</td>`;
  if(pv=='K'){
-  const rows=all.filter(x=>(x.s>=2||psel.has(x.key))&&(!pcat||x.kk==pcat)&&[x.id,x.tipe,x.lok,PCAT[x.kk]].join(' ').toLowerCase().includes(q)).sort((a,b)=>b.s-a.s||((a.best?a.best.v:1e9)-(b.best?b.best.v:1e9)));
-  $('#t').innerHTML=th(['','Kategori','ID Unit','Tipe','Lokasi','Actual','Komponen Terdekat','PM yang Akan Dilakukan','Status'])+'<tbody>'+(rows.map(x=>{const pl=planned.has(x.key)?pend2.find(y=>y.kk+'|'+y.id==x.key):null;
-   return `<tr><td><input type="checkbox" style="width:16px;height:16px;padding:0" ${psel.has(x.key)?'checked':''} ${pl?'disabled':''} onchange="pTog('${x.key}',this.checked)"></td><td>${PCAT[x.kk]}</td><td><b>${pEsc(x.id)}</b></td><td>${pEsc(x.tipe)||'<span class="nil">—</span>'}</td><td>${pEsc(x.lok)||'<span class="nil">—</span>'}</td><td>${pEsc(x.act)||'<span class="nil">—</span>'}</td><td>${pRun(x.best)}</td><td>${pNx(x.nx)}</td><td class="sc p${x.s}">${pl?'<span style="color:#1d4ed8">PLAN · '+fd(pl.tgl)+'</span>':LB[x.s]}</td></tr>`}).join('')||em(9,'Tidak ada unit yang mendekati PM. Tempel ID unit di atas untuk menambah unit lain.'))+'</tbody>';
+  const rows=all.filter(x=>(x.s==2||psel.has(x.key))&&(!psh||x.kk==psh)&&[x.id,x.tipe,x.lok,PCAT[x.kk]].join(' ').toLowerCase().includes(q)).sort(urg);
+  $('#t').innerHTML=th(['','ID Unit','Tipe','Lokasi','Actual','Komponen Terdekat','PM yang Akan Dilakukan','Status'])+'<tbody>'+(rows.map(x=>{const pl=planned.has(x.key)?pend2.find(y=>y.kk+'|'+y.id==x.key):null;
+   return `<tr><td><input type="checkbox" style="width:16px;height:16px;padding:0" ${psel.has(x.key)?'checked':''} ${pl?'disabled':''} onchange="pTog('${x.key}',this.checked)"></td>${idc(x)}<td>${pEsc(x.tipe)||'<span class="nil">—</span>'}</td><td>${pEsc(x.lok)||'<span class="nil">—</span>'}</td><td>${pEsc(x.act)||'<span class="nil">—</span>'}</td><td>${pRun(x.best,x.kk)}</td><td>${pNx(x.nx)}</td><td class="sc p${x.s}">${pl?'<span style="color:#1d4ed8">PLAN · '+fd(pl.tgl)+'</span>':LB[x.s]}</td></tr>`}).join('')||em(8,'Tidak ada unit Due Soon di sheet ini.'))+'</tbody>';
  }else{
   const by={};pend2.forEach(x=>(by[x.tgl]=by[x.tgl]||[]).push(x));
-  const row=(x,d)=>{const u=all.find(a=>a.key==x.kk+'|'+x.id)||{};return `<tr style="${d?'opacity:.55':''}"><td>${d?fd(x.tgl):`<input type="date" value="${x.tgl}" onchange="pDate(${x.i},this.value)">`}</td><td>${PCAT[x.kk]}</td><td><b>${pEsc(x.id)}</b></td><td>${pEsc(u.tipe)||'<span class="nil">—</span>'}</td><td>${pEsc(u.lok)||'<span class="nil">—</span>'}</td><td>${pRun(u.best)}</td><td>${pNx(u.nx)}</td><td class="sc ${d?'p1':'p2'}">${d?'SELESAI':'TERENCANA'}</td><td><button class="lk" onclick="pDel(${x.i})">Hapus</button></td></tr>`};
-  const g=(t,n)=>`<tr><td colspan="9" style="text-align:left;background:#f6f7f9;font-weight:600;color:#374151;height:34px">${t} <span style="color:var(--mu);font-weight:400">· ${n} unit</span></td></tr>`;
-  const fl=a=>a.filter(x=>(!pcat||x.kk==pcat)&&[x.id,PCAT[x.kk]].join(' ').toLowerCase().includes(q));
-  let h='';Object.keys(by).sort().forEach(d=>{const a=fl(by[d]).sort((x,y)=>x.id.localeCompare(y.id,'id',{numeric:true}));if(a.length)h+=g((d<today()?'⚠ ':'')+hr(d),a.length)+a.map(x=>row(x,0)).join('')});
+  const row=(x,d)=>{const u=all.find(a=>a.key==x.kk+'|'+x.id)||{};return `<tr style="${d?'opacity:.55':''}"><td>${d?fd(x.tgl):`<input type="date" value="${x.tgl}" onchange="pDate(${x.i},this.value)">`}</td>${idc(x)}<td>${pEsc(u.tipe)||'<span class="nil">—</span>'}</td><td>${pEsc(u.lok)||'<span class="nil">—</span>'}</td><td>${pRun(u.best,x.kk)}</td><td>${pNx(u.nx)}</td><td class="sc ${d?'p1':(u.s==3?'p3':'p2')}">${d?'SELESAI':(u.s==3?LB[3]:'TERENCANA')}</td><td><button class="lk" onclick="pDel(${x.i})">Hapus</button></td></tr>`};
+  const rowA=x=>`<tr><td><b style="color:#b42318">Segera</b></td>${idc(x)}<td>${pEsc(x.tipe)||'<span class="nil">—</span>'}</td><td>${pEsc(x.lok)||'<span class="nil">—</span>'}</td><td>${pRun(x.best,x.kk)}</td><td>${pNx(x.nx)}</td><td class="sc p3">${LB[3]}</td><td></td></tr>`;
+  const g=(t,n)=>`<tr><td colspan="8" style="text-align:left;background:#f6f7f9;font-weight:600;color:#374151;height:34px">${t} <span style="color:var(--mu);font-weight:400">· ${n} unit</span></td></tr>`;
+  const fl=a=>a.filter(x=>(!psh||x.kk==psh)&&[x.id,x.tipe||'',x.lok||'',PCAT[x.kk]].join(' ').toLowerCase().includes(q));
+  let h='';const ra=fl(reds).sort(urg);
+  if(ra.length)h+=g('<span style="color:#b42318">Perlu PM sekarang</span>',ra.length)+ra.map(rowA).join('');
+  Object.keys(by).sort().forEach(d=>{const a=fl(by[d]).sort((x,y)=>x.id.localeCompare(y.id,'id',{numeric:true}));if(a.length)h+=g((d<today()?'⚠ ':'')+hr(d),a.length)+a.map(x=>row(x,0)).join('')});
   const dd=fl(dn);if(dd.length)h+=g('Selesai',dd.length)+dd.map(x=>row(x,1)).join('');
-  $('#t').innerHTML=th(['Tgl Plan','Kategori','ID Unit','Tipe','Lokasi','Komponen Terdekat','PM yang Akan Dilakukan','Status',''])+'<tbody>'+(h||em(9,'Belum ada rencana. Buka tab "Pilih Unit", pilih unit yang mendekati PM, lalu tentukan tanggalnya.'))+'</tbody>';
+  $('#t').innerHTML=th(['Tgl Plan','ID Unit','Tipe','Lokasi','Komponen Terdekat','PM yang Akan Dilakukan','Status',''])+'<tbody>'+(h||em(8,'Tidak ada unit merah di sheet ini. Unit Due Soon bisa ditambahkan lewat tombol Due Soon.'))+'</tbody>';
  }}
 let hSh='',hFrom='',hTo='';
 const hOk=(r,q)=>{if(hSh&&r[2]!=hSh)return false;if(hFrom||hTo){const d=pt(r[1]);if(!d||(hFrom&&d<hFrom)||(hTo&&d>hTo))return false}return r.join(' ').toLowerCase().includes(q)};
@@ -755,15 +778,15 @@ async function clSv(i){const r=HRW[i],items={};let nok=0,bad=null;
  const[u,pm]=clUnit(r),body={key:'CL',unit:u,id:String(r[3]).trim(),tgl:String(r[1]).slice(0,10),pm,mek,ver,st,items,cat:$('#clc').value.trim()},b=$('#clsb');
  if(b){b.disabled=true;b.textContent='Menyimpan...'}
  D.clr=(D.clr||[]).filter(x=>[x[0],String(x[1]).trim(),clN(x[2])].join('|')!=clRK(r)).concat([[body.tgl,body.id,pm,mek,ver,st,items,body.cat]]);clClose();draw();enqueue(body)}
-/* ===== UNDUH PNG: baris hanya unit OVERDUE; lencana pojok kanan tetap menghitung Due Soon + Overdue ===== */
+/* ===== UNDUH PNG: semua unit ditampilkan; hanya warna merah yang diberi warna ===== */
 function exportPNG(){
  if(!D||k=='H')return;
  if(k=='P')return exportPlanPNG();
  const hr=k=='HR',c=C[k],byId=(a,b)=>String(a.r[c.id]).localeCompare(String(b.r[c.id]),'id',{numeric:true});
  const all=hr?(D.rows.HR||[]).map(r=>{const di=hrInfo(r);return{r,di,s:di.s}}):D.rows[k].map(r=>({r,s:st(r,c)}));
- const near=all.filter(x=>x.s>=2),list=near.filter(x=>x.s==3).sort(byId);
- if(!list.length){alert('Tidak ada unit dengan jadwal PM sudah lewat di '+T[k]+'.');return}
- const nO=list.length,nD=near.length-nO,v=x=>x==null||x===''?'–':String(x);
+ const list=all.slice().sort(byId);
+ if(!list.length){alert('Tidak ada data unit di '+T[k]+'.');return}
+ const nO=list.filter(x=>x.s==3).length,nD=list.filter(x=>x.s==2).length,v=x=>x==null||x===''?'–':String(x);
  let cols=[{h:'Tipe',w:110,f:x=>v(hr?(x.r[c.tipe]||HG(x.r[c.id])):x.r[c.tipe])},{h:'ID Unit',w:120,b:1,f:x=>v(x.r[c.id])},{h:'Lokasi',w:120,f:x=>v(x.r[c.lok])}];
  if(hr){
   cols.push({h:'PM Terakhir',w:130,f:x=>x.di.last?fd(x.di.last):'–'},
@@ -772,9 +795,10 @@ function exportPNG(){
  }else{
   cols.push({h:'Actual '+c.u,w:110,al:'r',f:x=>v(x.r[c.act])});
   c.tor.forEach((t,j)=>{
-   cols.push({g:c.nm[j],h:'To Run',w:100,al:'r',z:x=>{const n=num(x.r[t]);return n==null?0:n<=0?3:n<=D.cfg[c.w[j]][2]?2:1},f:x=>v(x.r[t])});
+   cols.push({g:c.nm[j],h:'To Run',w:100,al:'r',z:x=>zc(num(x.r[t]),c,j),f:x=>v(x.r[t])});
    cols.push({g:c.nm[j],h:'Next',w:100,al:'r',f:x=>v(x.r[c.nx[j]])})})}
  cols.push({h:'Status',w:120,al:'c',st:1,f:x=>LB[x.s]});
+ cols.forEach(cc=>cc.al='c');
  const S=2,PAD=24,RH=34,TOP=92,FOOT=36,hasG=cols.some(x=>x.g),HH=hasG?RH*2:RH,W=cols.reduce((a,x)=>a+x.w,0)+PAD*2,H=TOP+HH+list.length*RH+FOOT;
  const cv=document.createElement('canvas');cv.width=W*S;cv.height=H*S;
  const g=cv.getContext('2d'),FF='"Segoe UI",Roboto,Arial,sans-serif',TC=['#475569','#157347','#8a5a00','#b42318'],BG=['','','#fff1b8','#f9c9c4'];
@@ -783,9 +807,10 @@ function exportPNG(){
  const txt=(t,x,y,al,m)=>{g.textAlign=al;g.fillText(fit(String(t),m),x,y)};
  g.fillStyle='#fff';g.fillRect(0,0,W,H);
  g.fillStyle='#d85a30';g.fillRect(0,0,W,8);
- g.fillStyle='#1f2937';g.font='700 24px '+FF;txt('PM MONITORING · '+T[k],PAD,42,'left',W-PAD*2-260);
+ try{const _l=document.getElementById('lg');if(_l&&_l.complete&&_l.naturalWidth)g.drawImage(_l,PAD,20,56,56)}catch(_e){}
+ g.fillStyle='#1f2937';g.font='700 24px '+FF;txt('PM MONITORING · '+T[k],PAD+68,42,'left',W-PAD*2-328);
  const d=new Date();g.fillStyle='#6b7280';g.font='400 14px '+FF;
- txt('Unit jadwal PM sudah lewat · '+d.toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'})+' · '+d.toTimeString().slice(0,5),PAD,70,'left',W-PAD*2);
+ txt('Semua unit · merah = perlu PM · '+d.toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'})+' · '+d.toTimeString().slice(0,5),PAD+68,70,'left',W-PAD*2-68);
  /* lencana jumlah (kanan atas) */
  let bx=W-PAD;[[nD,'DUE SOON',2],[nO,'OVERDUE',3]].forEach(([n,l,s])=>{
   g.font='700 13px '+FF;const t=l+'  '+n,w=g.measureText(t).width+24;bx-=w;
@@ -808,14 +833,14 @@ function exportPNG(){
   if(ri%2){g.fillStyle='#fafbfc';g.fillRect(PAD,y,W-PAD*2,RH)}
   cols.forEach(cc=>{
    const z=cc.z?cc.z(it):0,t=cc.f(it);
-   if(z>=2){g.fillStyle=BG[z];g.fillRect(cc.x,y,cc.w,RH)}
-   g.fillStyle=cc.st?TC[it.s]:z>=2?(z==3?'#8a1c12':'#5c4400'):'#1f2937';
-   g.font=(cc.b||cc.st||z>=2?'700 ':'400 ')+'14px '+FF;
+   if(z==3){g.fillStyle=BG[z];g.fillRect(cc.x,y,cc.w,RH)}
+   g.fillStyle=cc.st?(it.s==3?TC[3]:'#1f2937'):z==3?'#8a1c12':'#1f2937';
+   g.font=(cc.b||cc.st||z==3?'700 ':'400 ')+'14px '+FF;
    txt(t,cc.al=='r'?cc.x+cc.w-12:cc.al=='c'?cc.x+cc.w/2:cc.x+12,y+RH/2,cc.al=='r'?'right':cc.al=='c'?'center':'left',cc.w-20)});
   g.fillStyle='#e5e7eb';g.fillRect(PAD,y+RH-1,W-PAD*2,1)});
  g.strokeStyle='#c9ced6';g.lineWidth=1;g.strokeRect(PAD+.5,y0+.5,W-PAD*2-1,HH+list.length*RH-1);
  g.fillStyle='#6b7280';g.font='400 12px '+FF;
- txt('Makkuraga Grup · '+list.length+' dari '+all.length+' unit jadwal PM sudah lewat'+(lastSync?' · data tersinkron '+lastSync:''),PAD,H-FOOT/2+4,'left',W-PAD*2);
+ txt('Makkuraga Grup · '+nO+' dari '+all.length+' unit berstatus merah (perlu PM)'+(lastSync?' · data tersinkron '+lastSync:''),PAD,H-FOOT/2+4,'left',W-PAD*2);
  const name='PM_'+T[k].replace(/[^A-Za-z0-9]+/g,'-')+'_'+today()+'.png';
  cv.toBlob(b=>{
   if(!b){alert('Gagal membuat gambar.');return}
@@ -848,9 +873,10 @@ function exportPlanPNG(){
  const txt=(t,x,y,al,m)=>{g.textAlign=al;g.fillText(fit(String(t),m),x,y)};
  g.fillStyle='#fff';g.fillRect(0,0,W,H);
  g.fillStyle='#d85a30';g.fillRect(0,0,W,8);
- g.fillStyle='#1f2937';g.font='700 24px '+FF;txt('PM MONITORING · Plan PM'+(cat?' · '+PCAT[cat]:''),PAD,42,'left',W-PAD*2-260);
+ try{const _l=document.getElementById('lg');if(_l&&_l.complete&&_l.naturalWidth)g.drawImage(_l,PAD,20,56,56)}catch(_e){}
+ g.fillStyle='#1f2937';g.font='700 24px '+FF;txt('PM MONITORING · Plan PM'+(cat?' · '+PCAT[cat]:''),PAD+68,42,'left',W-PAD*2-328);
  const d=new Date();g.fillStyle='#6b7280';g.font='400 14px '+FF;
- txt('Unit mendekati jadwal PM · '+d.toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'})+' · '+d.toTimeString().slice(0,5),PAD,70,'left',W-PAD*2);
+ txt('Unit mendekati jadwal PM · '+d.toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'})+' · '+d.toTimeString().slice(0,5),PAD+68,70,'left',W-PAD*2-68);
  let bx=W-PAD;[[nD,'DUE SOON',2],[nO,'OVERDUE',3]].forEach(([n,l,s])=>{
   g.font='700 13px '+FF;const t=l+'  '+n,w=g.measureText(t).width+24;bx-=w;
   g.fillStyle=BG[s];g.beginPath();g.roundRect?g.roundRect(bx,26,w,28,14):g.rect(bx,26,w,28);g.fill();
