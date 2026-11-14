@@ -286,8 +286,9 @@ const pmoSave=()=>{try{localStorage.setItem('pmPos',JSON.stringify(PMO))}catch(e
 function pmOv(kk,id){const o=PMO[kk+'|'+id];if(!o)return null;const H=lastPM(id,SN[kk]);if(H&&(pt(H[1])||'')>o.d){delete PMO[kk+'|'+id];pmoSave();return null}return o.i}
 function pNext(kk,r,c,id,best){
  if(kk=='AB'||kk=='LV'){const ov=pmOv(kk,id);if(ov!=null){if(kk=='AB')return{t:'PM '+HEC[ov],e:0,i:ov,o:1,u:'HM'};const nm=PM.LV[ov].split(':');return{t:nm[0],sub:(nm[1]||'').trim(),e:0,i:ov,o:1,u:'KM'}}}
- if(kk=='DT'){const a=[];c.tor.forEach((t,j)=>{const v=num(r[t]);if(v!=null&&v<=D.cfg[c.w[j]][2])a.push(c.nm[j])});
-  const t=a.length?a:(best?[best.n]:[]);return t.length?{t:'PM '+t.join(' + ')}:null}
+ if(kk=='DT'){const rd=[],yl=[];c.tor.forEach((t,j)=>{const v=num(r[t]);if(v==null)return;if(zc(v,c,j)==3)rd.push(c.nm[j]);else if(v<=D.cfg[c.w[j]][2])yl.push(c.nm[j])});
+  /* hanya komponen MERAH yang masuk PM sekarang; kuning dipisah (baru dipakai bila tidak ada yang merah / tab Due Soon) */
+  const a=rd.length?rd:yl,t=a.length?a:(best?[best.n]:[]);return t.length?{t:'PM '+t.join(' + ')}:null}
  if(kk=='AB'){const H=lastPM(id,SN.AB),act=num(r[c.act]);let m=null,e=1;
   if(H){const ha=num(H[6]),n=parseInt(String(H[7]).replace(/\D/g,''));
    if(ha!=null&&n){const m0=Math.round(ha/500);let bm=null;
@@ -304,7 +305,8 @@ function pNext(kk,r,c,id,best){
 const pNx=n=>!n||!n.t?'<span class="nil">—</span>':'<b>'+pEsc(n.t)+'</b>'+(n.sub?'<div style="font-size:11px;color:var(--mu)">'+pEsc(n.sub.toLowerCase())+'</div>':'');
 function pCands(){const out=[];PK.forEach(kk=>{const c=C[kk];((D.rows||{})[kk]||[]).forEach(r=>{const id=String(r[c.id]==null?'':r[c.id]).trim();if(!id)return;
  const dy=dayInfo(r,c);let best=dy?(dy.left==null?null:{n:c.nm[0],v:dy.left,u:'Hari'}):null;if(!dy)c.tor.forEach((t,j)=>{const v=num(r[t]);if(v!=null&&(best==null||v<best.v))best={n:c.nm[j],v,u:c.u}});
- out.push({kk,key:kk+'|'+id,id,tipe:r[c.tipe]||'',lok:r[c.lok]||'',act:dy?(dy.el==null?'':dy.el+' Hari'):r[c.act],s:st(r,c),best,u:c.u,nx:pNext(kk,r,c,id,best)})})});return out}
+ const yc=[];if(!dy)c.tor.forEach((t,j)=>{const v=num(r[t]);if(v!=null&&zc(v,c,j)==2)yc.push({n:c.nm[j],v,u:c.u})});yc.sort((a,b)=>a.v-b.v);
+ out.push({kk,key:kk+'|'+id,id,tipe:r[c.tipe]||'',lok:r[c.lok]||'',act:dy?(dy.el==null?'':dy.el+' Hari'):r[c.act],s:st(r,c),best,yc,u:c.u,nx:pNext(kk,r,c,id,best)})})});return out}
 const pDone=x=>(D.hist||[]).some(h=>String(h[3])==x.id&&h[2]==SN[x.kk]&&(pt(h[1])||'')>=x.cr);
 const pEsc=v=>String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;');
 const pRun=(b,kk)=>{if(!b)return '<span class="nil">—</span>';const fv=v=>v.toLocaleString('id-ID'),r=RED_AT[kk],
@@ -336,9 +338,10 @@ function drawP(q){
  $('#cards').innerHTML='';
  const all=pCands(),pend2=PL.map((x,i)=>({...x,i})).filter(x=>!pDone(x)),dn=PL.map((x,i)=>({...x,i})).filter(pDone);
  if(pv!='K')pv='R';
+ const dsF=x=>x.s==2||(x.s==3&&x.yc&&x.yc.length>0); /* Due Soon: kuning murni ATAU unit merah yang punya komponen lain kuning */
  const planned=new Set(pend2.map(x=>x.kk+'|'+x.id)),
-  reds=all.filter(x=>x.s==3&&!planned.has(x.key)),yel=all.filter(x=>x.s==2&&!planned.has(x.key)),
-  base=pv=='K'?all.filter(x=>x.s==2||psel.has(x.key)):[...reds,...pend2,...dn],cc=k2=>base.filter(x=>x.kk==k2).length;
+  reds=all.filter(x=>x.s==3&&!planned.has(x.key)),yel=all.filter(x=>dsF(x)&&!planned.has(x.key)),
+  base=pv=='K'?all.filter(x=>dsF(x)||psel.has(x.key)):[...reds,...pend2,...dn],cc=k2=>base.filter(x=>x.kk==k2).length;
  if(psh&&!PO.includes(psh))psh='';
  const btn=(v,l)=>`<button class="pbn${pv==v?' on':''}" onclick="pv='${v}';draw()">${l}</button>`,
   seg=`<div style="display:flex;gap:10px">${btn('R','Rencana ('+(reds.length+pend2.length)+')')}${btn('K','Due Soon ('+yel.length+')')}</div>`,
@@ -350,9 +353,10 @@ function drawP(q){
   urg=(a,b)=>(PO.indexOf(a.kk)-PO.indexOf(b.kk))||((a.best?a.best.v:1e9)-(b.best?b.best.v:1e9)),
   idc=x=>`<td><b>${pEsc(x.id)}</b>${psh?'':`<div style="font-size:11px;color:var(--mu)">${PCAT[x.kk]}</div>`}</td>`;
  if(pv=='K'){
-  const rows=all.filter(x=>(x.s==2||psel.has(x.key))&&(!psh||x.kk==psh)&&[x.id,x.tipe,x.lok,PCAT[x.kk]].join(' ').toLowerCase().includes(q)).sort(urg);
+  const rows=all.filter(x=>(dsF(x)||psel.has(x.key))&&(!psh||x.kk==psh)&&[x.id,x.tipe,x.lok,PCAT[x.kk]].join(' ').toLowerCase().includes(q)).sort(urg);
   $('#t').innerHTML=th(['','ID Unit','Tipe','Lokasi','Actual','Komponen Terdekat','PM yang Akan Dilakukan','Status'])+'<tbody>'+(rows.map(x=>{const pl=planned.has(x.key)?pend2.find(y=>y.kk+'|'+y.id==x.key):null;
-   return `<tr><td><input type="checkbox" style="width:16px;height:16px;padding:0" ${psel.has(x.key)?'checked':''} ${pl?'disabled':''} onchange="pTog('${x.key}',this.checked)"></td>${idc(x)}<td>${pEsc(x.tipe)||'<span class="nil">—</span>'}</td><td>${pEsc(x.lok)||'<span class="nil">—</span>'}</td><td>${pEsc(x.act)||'<span class="nil">—</span>'}</td><td>${pRun(x.best,x.kk)}</td><td>${pNx(x.nx)}</td><td class="sc p${x.s}">${pl?'<span style="color:#1d4ed8">PLAN · '+fd(pl.tgl)+'</span>':LB[x.s]}</td></tr>`}).join('')||em(8,'Tidak ada unit Due Soon di sheet ini.'))+'</tbody>';
+   const mx=x.s==3&&x.yc&&x.yc.length,rc=mx?x.best&&x.best.n:'',yb=mx?x.yc[0]:x.best,ynx=mx?{t:'PM '+x.yc.map(a=>a.n).join(' + ')}:x.nx;
+   return `<tr><td><input type="checkbox" style="width:16px;height:16px;padding:0" ${psel.has(x.key)?'checked':''} ${pl||mx?'disabled':''} onchange="pTog('${x.key}',this.checked)"></td>${idc(x)}<td>${pEsc(x.tipe)||'<span class="nil">—</span>'}</td><td>${pEsc(x.lok)||'<span class="nil">—</span>'}</td><td>${pEsc(x.act)||'<span class="nil">—</span>'}</td><td>${pRun(yb,x.kk)}</td><td>${pNx(ynx)}</td><td class="sc p${mx?2:x.s}">${pl?'<span style="color:#1d4ed8">PLAN · '+fd(pl.tgl)+'</span>':LB[mx?2:x.s]}${mx?'<div class="dt" style="font-weight:400;letter-spacing:0">'+pEsc(rc)+' merah · lihat Rencana</div>':''}</td></tr>`}).join('')||em(8,'Tidak ada unit Due Soon di sheet ini.'))+'</tbody>';
  }else{
   const by={};pend2.forEach(x=>(by[x.tgl]=by[x.tgl]||[]).push(x));
   const row=(x,d)=>{const u=all.find(a=>a.key==x.kk+'|'+x.id)||{};return `<tr style="${d?'opacity:.55':''}"><td>${d?fd(x.tgl):`<input type="date" value="${x.tgl}" onchange="pDate(${x.i},this.value)">`}</td>${idc(x)}<td>${pEsc(u.tipe)||'<span class="nil">—</span>'}</td><td>${pEsc(u.lok)||'<span class="nil">—</span>'}</td><td>${pRun(u.best,x.kk)}</td><td>${pNx(u.nx)}</td><td class="sc ${d?'p1':(u.s==3?'p3':'p2')}">${d?'SELESAI':(u.s==3?LB[3]:'TERENCANA')}</td><td><button class="lk" onclick="pDel(${x.i})">Hapus</button></td></tr>`};
