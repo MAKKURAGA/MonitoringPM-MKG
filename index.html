@@ -331,7 +331,7 @@ function drawP(q){
  const th=h=>'<thead><tr>'+h.map(x=>`<th>${x}</th>`).join('')+'</tr></thead>',em=(n,m)=>`<tr><td class="empty" colspan="${n}">${m}</td></tr>`;
  if(pv=='K'){
   const rows=all.filter(x=>(x.s>=2||psel.has(x.key))&&(!pcat||x.kk==pcat)&&[x.id,x.tipe,x.lok,PCAT[x.kk]].join(' ').toLowerCase().includes(q)).sort((a,b)=>b.s-a.s||((a.best?a.best.v:1e9)-(b.best?b.best.v:1e9)));
-  $('#t').innerHTML=th(['','Kategori','ID Unit','Tipe','Lokasi','Actual','Komponen Terdekat','PM Berikutnya','Status'])+'<tbody>'+(rows.map(x=>{const pl=planned.has(x.key)?pend2.find(y=>y.kk+'|'+y.id==x.key):null;
+  $('#t').innerHTML=th(['','Kategori','ID Unit','Tipe','Lokasi','Actual','Komponen Terdekat','PM yang Akan Dilakukan','Status'])+'<tbody>'+(rows.map(x=>{const pl=planned.has(x.key)?pend2.find(y=>y.kk+'|'+y.id==x.key):null;
    return `<tr><td><input type="checkbox" style="width:16px;height:16px;padding:0" ${psel.has(x.key)?'checked':''} ${pl?'disabled':''} onchange="pTog('${x.key}',this.checked)"></td><td>${PCAT[x.kk]}</td><td><b>${pEsc(x.id)}</b></td><td>${pEsc(x.tipe)||'<span class="nil">—</span>'}</td><td>${pEsc(x.lok)||'<span class="nil">—</span>'}</td><td>${pEsc(x.act)||'<span class="nil">—</span>'}</td><td>${pRun(x.best)}</td><td>${pNx(x.nx)}</td><td class="sc p${x.s}">${pl?'<span style="color:#1d4ed8">PLAN · '+fd(pl.tgl)+'</span>':LB[x.s]}</td></tr>`}).join('')||em(9,'Tidak ada unit yang mendekati PM. Tempel ID unit di atas untuk menambah unit lain.'))+'</tbody>';
  }else{
   const by={};pend2.forEach(x=>(by[x.tgl]=by[x.tgl]||[]).push(x));
@@ -340,7 +340,7 @@ function drawP(q){
   const fl=a=>a.filter(x=>(!pcat||x.kk==pcat)&&[x.id,PCAT[x.kk]].join(' ').toLowerCase().includes(q));
   let h='';Object.keys(by).sort().forEach(d=>{const a=fl(by[d]).sort((x,y)=>x.id.localeCompare(y.id,'id',{numeric:true}));if(a.length)h+=g((d<today()?'⚠ ':'')+hr(d),a.length)+a.map(x=>row(x,0)).join('')});
   const dd=fl(dn);if(dd.length)h+=g('Selesai',dd.length)+dd.map(x=>row(x,1)).join('');
-  $('#t').innerHTML=th(['Tgl Plan','Kategori','ID Unit','Tipe','Lokasi','Komponen Terdekat','PM Berikutnya','Status',''])+'<tbody>'+(h||em(9,'Belum ada rencana. Buka tab "Pilih Unit", pilih unit yang mendekati PM, lalu tentukan tanggalnya.'))+'</tbody>';
+  $('#t').innerHTML=th(['Tgl Plan','Kategori','ID Unit','Tipe','Lokasi','Komponen Terdekat','PM yang Akan Dilakukan','Status',''])+'<tbody>'+(h||em(9,'Belum ada rencana. Buka tab "Pilih Unit", pilih unit yang mendekati PM, lalu tentukan tanggalnya.'))+'</tbody>';
  }}
 let hSh='',hFrom='',hTo='';
 const hOk=(r,q)=>{if(hSh&&r[2]!=hSh)return false;if(hFrom||hTo){const d=pt(r[1]);if(!d||(hFrom&&d<hFrom)||(hTo&&d>hTo))return false}return r.join(' ').toLowerCase().includes(q)};
@@ -558,7 +558,7 @@ function abAsk(id){
   pos=sg&&sg.i!=null?sg.i:-1;
  $('#f').innerHTML=`<div class="hd"><div><b class="ft">Update PM ${t}</b><div class="fs">${pEsc(row[c.tipe]||'—')} · ${fm(act)} ${c.u} · ${fd(today())}</div></div></div>${st}${n!=null&&n>=2?`<div style="margin-top:8px;font-size:12px;color:#b45309">⚠ ${c.u} terakhir diperbarui ${n} hari lalu</div>`:''}
  <label>Jenis PM</label><select id="abj"><option value="">— Pilih —</option>${PM[kk].map(x=>`<option${sgt&&(x==sgt||x.startsWith(sgt+':'))?' selected':''}>${x}</option>`).join('')}</select>
- <div style="margin-top:10px;padding:8px 10px;background:#f6f7f9;border:1px solid var(--ln);border-radius:4px;font-size:12px;line-height:1.7;color:#475569"><b style="color:var(--tx)">Urutan PM ${kk=='AB'?'alat':'LV'}:</b> ${seq.map((x,i)=>`<span onclick="pmSetPos('${q}',${i})" title="Klik: jadikan ini PM berikutnya" style="display:inline-block;white-space:nowrap;cursor:pointer;padding:0 5px;border-radius:3px;${i===pos?'background:#d95a2b;color:#fff;font-weight:700':'border:1px solid transparent'}">${x}</span>`).join(' → ')} <span style="color:var(--mu)">→ ulang</span><div style="font-size:11px;color:var(--mu);margin-top:3px">Klik urutan untuk mengubah PM berikutnya unit ini (dipakai di Plan PM).${sg&&sg.o?' <a href="#" onclick="pmResetPos(\''+q+'\');return false" style="color:#b2431f;font-weight:600">Kembalikan otomatis</a>':''}</div></div>
+ <div style="margin-top:10px;padding:8px 10px;background:#f6f7f9;border:1px solid var(--ln);border-radius:4px;font-size:12px;line-height:1.7;color:#475569"><b style="color:var(--tx)">Urutan PM ${kk=='AB'?'alat':'LV'}:</b> ${seq.map((x,i)=>`<span onclick="pmSetPos('${q}',${i})" title="Klik: jadikan ini PM yang akan dilakukan" style="display:inline-block;white-space:nowrap;cursor:pointer;padding:0 5px;border-radius:3px;${i===pos?'background:#d95a2b;color:#fff;font-weight:700':'border:1px solid transparent'}">${x}</span>`).join(' → ')} <span style="color:var(--mu)">→ ulang</span><div style="font-size:11px;color:var(--mu);margin-top:3px">Klik urutan untuk mengubah PM yang akan dilakukan pada unit ini (dipakai di Plan PM).${sg&&sg.o?' <a href="#" onclick="pmResetPos(\''+q+'\');return false" style="color:#b2431f;font-weight:600">Kembalikan otomatis</a>':''}</div></div>
  <div class="bar"><button class="on big" onclick="abSure('${q}')">Lanjut</button><button class="big" onclick="$('#m').classList.remove('show')">Batal</button></div>`;
  $('#m').classList.add('show')}
 function abSure(id){
@@ -837,7 +837,7 @@ function exportPlanPNG(){
   {h:'Lokasi',w:90,f:x=>v(x.lok)},
   {h:'Actual',w:100,al:'r',f:x=>v(x.act)},
   {h:'Komponen Terdekat',w:210,z:x=>x.s,f:x=>!x.best?'–':x.best.v<=0?x.best.n+': Lewat '+(-x.best.v).toLocaleString('id-ID')+' '+x.best.u:x.best.n+': '+x.best.v.toLocaleString('id-ID')+' '+x.best.u},
-  {h:'PM Berikutnya',w:330,b:1,f:x=>{const n=x.nx;if(!n||!n.t)return '–';return n.t+(n.sub?' · '+n.sub.toLowerCase():'')}},
+  {h:'PM yang Akan Dilakukan',w:330,b:1,f:x=>{const n=x.nx;if(!n||!n.t)return '–';return n.t+(n.sub?' · '+n.sub.toLowerCase():'')}},
   {h:'Status',w:110,al:'c',st:1,f:x=>LB[x.s]}];
  cols.forEach(cc=>{cc.al='c'});
  const S=2,PAD=24,RH=34,TOP=92,FOOT=36,W=cols.reduce((a,x)=>a+x.w,0)+PAD*2,H=TOP+RH+list.length*RH+FOOT;
@@ -880,4 +880,92 @@ function exportPlanPNG(){
   dl()},'image/png')}
 try{if(localStorage.getItem('pmMini'))document.body.classList.add('mini')}catch(e){}
 (async()=>{const q=await kvGet('queue');if(Array.isArray(q))Q=q;netUI();await load();flush()})();
-</script></body></html>
+</script><style id="authCss">
+#authBox{position:fixed;inset:0;z-index:99999;display:none;align-items:center;justify-content:center;background:linear-gradient(135deg,#fff7f3,#f1f5f9);padding:16px;font-family:inherit}
+#authBox.show{display:flex}
+#authBox .ac{width:100%;max-width:360px;background:#fff;border:1px solid #e5e7eb;border-radius:14px;box-shadow:0 10px 40px rgba(15,23,42,.12);padding:28px 24px;text-align:center}
+#authBox img{width:56px;height:56px;object-fit:contain}
+#authBox h2{margin:10px 0 2px;font-size:18px;color:#1f2937}
+#authBox .sb{font-size:12.5px;color:#6b7280;margin-bottom:18px}
+#authBox input{width:100%;box-sizing:border-box;height:42px;padding:0 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:15px;text-align:center;letter-spacing:2px}
+#authBox input:focus{outline:2px solid #d9582b55;border-color:#d9582b}
+#authBox button{width:100%;height:42px;margin-top:10px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;border:1px solid #cbd5e1;background:#fff;color:#374151}
+#authBox button.pri{background:#d9582b;border-color:#d9582b;color:#fff}
+#authBox .er{min-height:18px;margin-top:8px;font-size:12.5px;color:#b91c1c}
+#authBox .or{margin:14px 0 0;font-size:12px;color:#9ca3af}
+#sbFoot{margin-top:auto;border-top:1px solid #e5e7eb;padding:6px 0 8px;display:flex;flex-direction:column}
+#sbFoot #roleBadge{margin:4px 16px 6px;font-size:11.5px;font-weight:600;padding:4px 10px;border-radius:999px;background:#fef3ee;color:#b8431a;border:1px solid #f6c9b6;text-align:center;align-self:flex-start}
+#sbFoot button{width:100%;height:38px;padding:0 16px;border:0;border-radius:0;background:transparent;color:#111!important;font-weight:500;text-align:left;justify-content:flex-start;display:flex;align-items:center;cursor:pointer}
+#sbFoot button:hover{background:#f3f4f6;color:#000!important}
+#sbFoot .ni{display:none;font-size:16px}
+#sbFoot .nl{display:inline-flex;align-items:center;gap:10px}
+#sbFoot .ni{align-items:center}
+#sbFoot .sbi{flex:none;color:inherit}
+body.mini #sbFoot button{padding:0;justify-content:center}
+body.mini #sbFoot .nl{display:none}body.mini #sbFoot .ni{display:inline}
+body.mini #sbFoot #roleBadge{display:none}
+@media (max-width:760px){#sbFoot{margin-top:0;margin-left:auto;border-top:0;flex-direction:row;align-items:center;padding:0 8px}
+ #sbFoot button{width:auto;white-space:nowrap;height:52px;padding:0 12px}#sbFoot #roleBadge{margin:0 6px}
+ body.mini #sbFoot .nl{display:inline}body.mini #sbFoot .ni{display:none}body.mini #sbFoot #roleBadge{display:block}body.mini #sbFoot button{padding:0 12px}}
+body.viewer #roleBadge{background:#eef2ff;color:#3730a3;border-color:#c7d2fe}
+#authToast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#1f2937;color:#fff;padding:10px 16px;border-radius:8px;font-size:13px;z-index:100000;display:none;max-width:90vw;text-align:center}
+/* ===== MODE PELIHAT: sembunyikan semua kontrol edit ===== */
+body.viewer #pcnt,body.viewer #pdt,body.viewer #pid,
+body.viewer button[onclick*="pAdd("],body.viewer button[onclick*="pPick("],body.viewer button[onclick*="pClean("],
+body.viewer button[onclick*="pDel("],body.viewer button[onclick*="undoKM("],body.viewer button[onclick*="lgDel("],
+body.viewer button[onclick*="lgSave("],body.viewer button[onclick*="'edit')"],body.viewer button[onclick*="pmSure("],
+body.viewer button[onclick*="abSure("],body.viewer button[onclick*="pmGo("],body.viewer button[onclick*="abGo("],
+body.viewer button[onclick*="save("],body.viewer button[onclick*="clSv("],body.viewer button[onclick*="clAll("],
+body.viewer #t input[type=checkbox]{display:none!important}
+body.viewer #t input.ki{pointer-events:none;background:transparent;border-color:transparent}
+body.viewer #t input[type=date]{pointer-events:none;border-color:transparent;background:transparent}
+body.viewer td.pmc{cursor:default}
+</style>
+<div id="authBox"><div class="ac"><img id="authLg" alt=""><h2>PM MONITORING</h2><div class="sb">Makkuraga Grup</div>
+<input id="authPw" type="password" placeholder="Sandi" autocomplete="off" autocapitalize="characters" spellcheck="false">
+<div class="er" id="authEr"></div>
+<button class="pri" id="authGo">Masuk (Edit)</button>
+<div class="or">atau</div>
+<button id="authView">Masuk sebagai Pelihat</button></div></div>
+<div id="authToast"></div>
+<script>
+/* ===== LOGIN: admin (sandi) = semua akses · pelihat = hanya lihat + Unduh PNG =====
+   CATATAN: ini pembatas tampilan di browser, BUKAN keamanan server. Lihat catatan di balasan. */
+(function(){
+ const H=6527535377110893,KEY='pmRole';
+ const hs=(s,seed=0)=>{let h1=0xdeadbeef^seed,h2=0x41c6ce57^seed;for(let i=0,ch;i<s.length;i++){ch=s.charCodeAt(i);h1=Math.imul(h1^ch,2654435761);h2=Math.imul(h2^ch,1597334677)}
+  h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);return 4294967296*(2097151&h2)+(h1>>>0)};
+ const box=document.getElementById('authBox'),pw=document.getElementById('authPw'),er=document.getElementById('authEr'),toast=document.getElementById('authToast');
+ let role=null;try{role=localStorage.getItem(KEY)}catch(e){}
+ if(role!=='admin'&&role!=='viewer')role=null;
+ window.isAdmin=()=>role==='admin';
+ let tt;window.authDeny=function(){toast.textContent='Mode Pelihat: tidak bisa mengubah data. Keluar lalu masuk dengan sandi untuk edit.';toast.style.display='block';clearTimeout(tt);tt=setTimeout(()=>toast.style.display='none',2800)};
+ function badge(){let b=document.getElementById('roleBadge');
+  if(!b){const as=document.querySelector('aside'),png=document.getElementById('png');if(!as)return;
+   const ft=document.createElement('div');ft.id='sbFoot';
+   b=document.createElement('div');b.id='roleBadge';
+   const o=document.createElement('button');o.id='authOut';o.title='Keluar / ganti akun';o.innerHTML='<b class="ni"><svg class="sbi" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg></b><span class="nl"><svg class="sbi" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>Keluar</span>';o.onclick=logout;
+   if(png){png.innerHTML='<b class="ni"><svg class="sbi" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg></b><span class="nl"><svg class="sbi" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>Unduh PNG</span>';ft.appendChild(png)}
+   ft.appendChild(o);ft.insertBefore(b,ft.firstChild);as.appendChild(ft)}
+  b.textContent=role=='admin'?'Admin':'Pelihat'}
+ function apply(){document.body.classList.toggle('viewer',role!=='admin');
+  if(role){box.classList.remove('show');badge();try{draw()}catch(e){}}
+  else{box.classList.add('show');pw.value='';er.textContent='';setTimeout(()=>pw.focus(),50)}}
+ function set(r){role=r;try{r?localStorage.setItem(KEY,r):localStorage.removeItem(KEY)}catch(e){}apply()}
+ function logout(){set(null)}
+ function tryAdmin(){if(!pw.value){er.textContent='Isi sandi dulu.';return}
+  if(hs('pmmkg|'+pw.value.trim().toUpperCase())===H)set('admin');else{er.textContent='Sandi salah.';pw.select()}}
+ document.getElementById('authGo').onclick=tryAdmin;
+ document.getElementById('authView').onclick=()=>set('viewer');
+ pw.addEventListener('keydown',e=>{if(e.key==='Enter')tryAdmin()});
+ pw.addEventListener('input',()=>{const p=pw.selectionStart,u=pw.value.toUpperCase();if(u!==pw.value){pw.value=u;try{pw.setSelectionRange(p,p)}catch(x){}}});
+ try{const lg=document.getElementById('lg');document.getElementById('authLg').src=lg&&lg.src?lg.src:document.querySelector('link[rel=icon]').href}catch(e){}
+ /* penjaga: semua fungsi yang mengubah data diblok untuk pelihat */
+ ['enqueue','saveKM','save','saveDay','lgDel','lgSave','pAdd','pDate','pDel','pClean','pPick','pTog','pmAsk','pmSure','pmGo','abAsk','abSure','abGo','pmSetPos','pmResetPos','undoKM','openD','clSv','clAll'].forEach(n=>{
+  const o=window[n];if(typeof o!=='function')return;
+  window[n]=function(){if(role!=='admin'){authDeny();return}return o.apply(this,arguments)}});
+ document.addEventListener('focusin',e=>{if(role!=='admin'&&e.target&&e.target.matches&&e.target.matches('input.ki')){e.target.blur()}});
+ apply();
+})();
+</script>
+</body></html>
