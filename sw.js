@@ -1,11 +1,14 @@
 /* PM MKG - service worker
-   Naikkan angka VERSI setiap kali index.html diperbarui agar HP mengambil versi baru. */
-const VERSI='pm-mkg-v9';
-const SHELL=['./','./index.html','./manifest.json','./icon-192.png','./icon-512.png'];
+   VERSI cukup dinaikkan jika file statis (ikon/manifest) berubah.
+   index.html sudah network-first, jadi selalu mengambil versi terbaru saat ada sinyal. */
+const VERSI='pm-mkg-v10';
+const WAJIB=['./index.html'];                                   /* gagal di-cache = install gagal & diulang */
+const OPSIONAL=['./','./manifest.json','./icon-192.png','./icon-512.png'];
+const TIMEOUT_MS=4000;                                          /* sinyal lemah: setelah ini pakai cache */
 
 self.addEventListener('install',e=>{
   e.waitUntil(caches.open(VERSI)
-    .then(c=>Promise.all(SHELL.map(u=>c.add(u).catch(()=>{}))))
+    .then(c=>c.addAll(WAJIB).then(()=>Promise.all(OPSIONAL.map(u=>c.add(u).catch(()=>{})))))
     .then(()=>self.skipWaiting()));
 });
 
@@ -15,6 +18,10 @@ self.addEventListener('activate',e=>{
     .then(()=>self.clients.claim()));
 });
 
+function dariCache(){
+  return caches.match('./index.html').then(h=>h||caches.match('./'));
+}
+
 self.addEventListener('fetch',e=>{
   const r=e.request;
   if(r.method!=='GET')return;
@@ -22,15 +29,32 @@ self.addEventListener('fetch',e=>{
   /* Apps Script (data), CDN, dan semua domain lain: langsung ke jaringan, tidak pernah di-cache di sini */
   if(u.origin!==location.origin)return;
 
-  /* Halaman utama: ambil dari jaringan dulu (selalu versi terbaru), cadangan dari cache saat offline */
+  /* Halaman utama: jaringan dulu, tapi jika lambat (>TIMEOUT_MS) atau gagal pakai cache.
+     Hanya respons sehat (ok, bukan redirect) yang disimpan, agar cache tidak tertimpa halaman error. */
   if(r.mode==='navigate'){
-    e.respondWith(
-      fetch(r).then(res=>{
+    let simpan=Promise.resolve();
+    const net=fetch(r).then(res=>{
+      if(res&&res.ok&&res.type==='basic'&&!res.redirected){
         const cp=res.clone();
-        caches.open(VERSI).then(c=>c.put('./index.html',cp));
-        return res;
-      }).catch(()=>caches.match('./index.html').then(h=>h||caches.match('./')))
-    );
+        simpan=caches.open(VERSI).then(c=>c.put('./index.html',cp)).catch(()=>{});
+      }
+      return res;
+    });
+    e.waitUntil(net.then(()=>simpan,()=>{}));   /* biar cache tetap diperbarui walau respons cache sudah dipakai */
+    const batas=new Promise(res=>setTimeout(()=>res(null),TIMEOUT_MS));
+
+    e.respondWith((async()=>{
+      try{
+        const hasil=await Promise.race([net,batas]);
+        if(hasil)return hasil;
+        const h=await dariCache();
+        return h||net;                          /* belum ada cache: tunggu jaringan */
+      }catch(err){
+        const h=await dariCache();
+        if(h)return h;
+        throw err;
+      }
+    })());
     return;
   }
 
@@ -38,9 +62,13 @@ self.addEventListener('fetch',e=>{
   e.respondWith(
     caches.match(r).then(h=>{
       const net=fetch(r).then(res=>{
-        if(res&&res.ok){const cp=res.clone();caches.open(VERSI).then(c=>c.put(r,cp))}
+        if(res&&res.ok){
+          const cp=res.clone();
+          caches.open(VERSI).then(c=>c.put(r,cp)).catch(()=>{});
+        }
         return res;
-      }).catch(()=>h);
+      }).catch(()=>h||Response.error());
+      e.waitUntil(net.catch(()=>{}));
       return h||net;
     })
   );

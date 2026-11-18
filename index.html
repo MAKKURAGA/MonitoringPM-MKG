@@ -520,8 +520,8 @@ function hSet(a,v){if(a=='s')hSh=v;else if(a=='f')hFrom=v;else hTo=v;if(hFrom&&h
 function hReset(){hSh=hFrom=hTo='';draw()}
 let HRW=[];
 function drawH(q){$('#cards').innerHTML='';$('#upd').innerHTML='';
- const cn={},hd=['Tgl Servis','Sheet','ID Unit','PM ke-','Tipe','Komponen','Actual','Jenis PM','Verifikasi Checklist','PDF'],all=(D.hist||[]).map(r=>{const q2=r[2]+'|'+r[3];cn[q2]=(cn[q2]||0)+1;return[...r,cn[q2]]}).reverse(),hasF=!!(hFrom||hTo||q),rows=hasF?all.filter(r=>hOk(r,q)):all.slice(0,15);HRW=rows;
- $('#t').innerHTML='<thead><tr>'+hd.map(x=>`<th>${x}</th>`).join('')+'</tr></thead><tbody>'+(rows.map((r,ix)=>`<tr class="u" onclick="openCL(${ix})">`+[1,2,3,8,4,5,6,7].map(i=>`<td>${i==1?fd(r[i]):i==6?(r[i]===''||r[i]==null?'—':(+r[i]).toLocaleString('id-ID')):i==8?'<b>'+r[i]+'</b>':r[i]}</td>`).join('')+`<td>${clBadge(r)}</td><td><button class="lk" onclick="event.stopPropagation();clPdf(${ix})">PDF</button></td></tr>`).join('')||'<tr><td class="empty" colspan="10">'+(!all.length?'Belum ada riwayat. Pilih Jenis PM lalu Simpan.':hasF?'Tidak ada riwayat pada filter ini.':'Pilih rentang tanggal (atau cari ID unit) untuk menampilkan riwayat.')+'</td></tr>')+(!hasF&&all.length>15?'<tr><td class="empty" colspan="10">Menampilkan 15 riwayat terbaru. Pilih tanggal atau cari ID unit untuk melihat lainnya.</td></tr>':'')+'</tbody>';const shs=[...new Set((D.hist||[]).map(r=>r[2]).filter(Boolean))].sort(),act=hSh||hFrom||hTo;
+ const cn={},hd=['Tgl Servis','Sheet','ID Unit','PM ke-','Tipe','Komponen','Actual','Jenis PM','Catatan','Verifikasi Checklist','PDF'],all=(D.hist||[]).map(r=>{const q2=r[2]+'|'+r[3];cn[q2]=(cn[q2]||0)+1;return[...r.slice(0,8),cn[q2],r[8]==null?'':String(r[8])]}).reverse(),hasF=!!(hFrom||hTo||q),rows=hasF?all.filter(r=>hOk(r,q)):all.slice(0,15);HRW=rows;
+ $('#t').innerHTML='<thead><tr>'+hd.map(x=>`<th>${x}</th>`).join('')+'</tr></thead><tbody>'+(rows.map((r,ix)=>`<tr class="u" onclick="openCL(${ix})">`+[1,2,3,8,4,5,6,7].map(i=>`<td>${i==1?fd(r[i]):i==6?(r[i]===''||r[i]==null?'—':(+r[i]).toLocaleString('id-ID')):i==8?'<b>'+r[i]+'</b>':r[i]}</td>`).join('')+`<td style="max-width:220px;white-space:pre-wrap;font-size:12px;color:#475569">${String(r[9]||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')||'<span style="color:#cbd5e1">—</span>'}</td><td>${clBadge(r)}</td><td><button class="lk" onclick="event.stopPropagation();clPdf(${ix})">PDF</button></td></tr>`).join('')||'<tr><td class="empty" colspan="11">'+(!all.length?'Belum ada riwayat. Pilih Jenis PM lalu Simpan.':hasF?'Tidak ada riwayat pada filter ini.':'Pilih rentang tanggal (atau cari ID unit) untuk menampilkan riwayat.')+'</td></tr>')+(!hasF&&all.length>15?'<tr><td class="empty" colspan="11">Menampilkan 15 riwayat terbaru. Pilih tanggal atau cari ID unit untuk melihat lainnya.</td></tr>':'')+'</tbody>';const shs=[...new Set((D.hist||[]).map(r=>r[2]).filter(Boolean))].sort(),act=hSh||hFrom||hTo;
  $('#upd').innerHTML=`<span class="lbl">Sheet</span><select class="hf" onchange="hSet('s',this.value)"><option value="">Semua sheet</option>${shs.map(x=>`<option value="${clE(x)}"${x==hSh?' selected':''}>${clE(x)}</option>`).join('')}</select><span class="lbl">Tanggal</span><input type="date" class="hf" value="${hFrom}" onchange="hSet('f',this.value)"><span class="lbl">s/d</span><input type="date" class="hf" value="${hTo}" onchange="hSet('t',this.value)">${act?'<button class="hf" onclick="hReset()">Reset</button>':''}<button class="hf" onclick="clPdfAll()" title="Cetak semua checklist yang tampil (ikut filter &amp; pencarian ID unit)">PDF semua</button>`}
 const PM={DT:['PM ENGINE','PM TRANSMISI','PM GARDAN'],AB:['PM 500','PM 1000','PM 2000','PM 4000'],LV:['PM 1: OLI MESIN','PM 2: OLI MESIN DAN TRANSMISI','PM 3: OLI MESIN DAN GARDAN','PM 4: OLI MESIN DAN TRANSMISI','PM 5: OLI MESIN','PM 6: GENERAL']};
 function jenisHTML(id){const o=PM[k];if(!o)return '';let sel='';
@@ -539,7 +539,7 @@ const hr=p=>['Min','Sen','Sel','Rab','Kam','Jum','Sab'][new Date(p+'T00:00:00').
 const ub=s=>{const n=dAgo(s);return n==null?'<span class="bd b2">Belum ada data</span>':n<=0?'<span class="bd b0">✓ Hari Ini</span><div class="dt">'+hr(pt(s))+'</div>':`<span class="bd ${n>=2?'b2':'b1'}" title="${fd(pt(s))}">Belum · ${n} Hari Lalu</span><div class="dt">${hr(pt(s))}</div>`};
 let uf='';
 const today=()=>new Date(Date.now()-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10);
-const histOf=id=>(D.hist||[]).filter(x=>String(x[3])==id&&x[2]==SN[k]).map((x,i)=>[x,i+1]);
+const histOf=id=>(D.hist||[]).filter(x=>String(x[3])==id&&x[2]==SN[k]).sort((a,b)=>String(a[1]).slice(0,10).localeCompare(String(b[1]).slice(0,10))||String(a[0]).localeCompare(String(b[0]))).map((x,i)=>[x,i+1]);
 /* ===== NOTE HISTORY PM: arahkan kursor ke kolom To Run (Engine/Transmisi/Gardan) ===== */
 (function(){
  const tip=document.createElement('div');tip.id='pmtip';document.body.appendChild(tip);
@@ -554,7 +554,7 @@ const histOf=id=>(D.hist||[]).filter(x=>String(x[3])==id&&x[2]==SN[k]).map((x,i)
   const st=Math.max(0,a.length-MAX);
   if(st)h+='<div class="tn">… '+st+' riwayat sebelumnya</div>';
   a.slice(st).forEach((o,i)=>{const x=o.x,km=x[6]===''||x[6]==null?'':(+x[6]).toLocaleString('id-ID')+' '+c.u,jn=String(x[7]==null?'':x[7]).trim();
-   h+='<div>'+(st+i+1)+'. '+X(fd(pt(x[1])||x[1]))+(jn?' '+X(jn):'')+(km?' ('+km+')':'')+'</div>'});
+   const last=o===a[a.length-1];h+='<div'+(last?' style="font-weight:700"':'')+'>'+(st+i+1)+'. '+X(fd(pt(x[1])||x[1]))+(jn?' '+X(jn):'')+(km?' ('+km+')':'')+(last?' <span style="color:#c2410c">← Last servis</span>':'')+'</div>'});
   return h+(off?'<div class="tn" style="margin-top:3px">Unit Out Site · hanya untuk dilihat</div>':'<div class="tn" style="margin-top:3px">Klik untuk update PM'+(k=='DT'?' '+X(nm):'')+'</div>')}
  function hide(){tip.style.display='none';cur=null}
  document.addEventListener('mouseover',ev=>{
@@ -583,15 +583,17 @@ function dtTab(id,t,sel,mode){
  id=String(id);const q=id.replace(/'/g,"\\'"),esc=x=>String(x==null?'':x).replace(/&/g,'&amp;').replace(/</g,'&lt;'),
   empty=m=>`<div style="padding:40px 0;text-align:center;color:#64748b">${m}</div>`,fm=x=>(+x).toLocaleString('id-ID'),
   km=kmOf(id),hp=histOf(id),L0=lgList(id,t),fl=t=='km'&&lgM,L=fl?L0.filter(o=>(pt(o.x[1])||'').slice(0,7)==lgM):L0,oi=new Map(L.map((o,j)=>[o,L0.indexOf(o)]));
+ const jl=[...new Set([...(k=='AB'?['PM 500','PM 1000','PM 2000','PM 4000']:[]),...(D.hist||[]).filter(h=>h[2]==SN[k]).map(h=>String(h[7]||'')).filter(Boolean)])],
+  jo=cur=>{cur=String(cur||'');return (jl.includes(cur)||!cur?jl:[...jl,cur]).map(v=>`<option${v===cur?' selected':''}>${esc(v)}</option>`).join('')};
  const rowH=(o,i0)=>{const {x,d,n}=o,i=oi.get(o);
   const isPM=t=='pm',tg=String(x[1]).slice(0,10),ac=isPM?x[6]:x[5],
    main=isPM?`<span class="hn">${n}.</span><span>${fd(x[1])}</span><b>${esc(x[7]||x[5])}</b><span class="hk">${x[6]===''||x[6]==null?'—':fm(x[6])+' '+c.u}</span>`
             :`<span class="hn">${n}.</span><span>${fd(x[1])}</span><b>${fm(x[5])} ${c.u}</b><span class="hk">${d==null?'awal':(d>=0?'+':'')+fm(d)}${x[6]?' · '+esc(x[6]):''}</span>`;
-  let extra='';
+  let extra='';const nt=isPM&&x[8]?`<div style="font-size:11px;color:#64748b;padding:0 0 8px 28px;margin-top:-2px;white-space:pre-wrap;word-break:break-word">📝 ${esc(x[8])}</div>`:'';
   if(sel===i){
-   if(mode=='edit')extra=`<div style="display:flex;gap:6px;align-items:center;padding:6px 0 10px;flex-wrap:wrap"><input type="date" id="le_d" value="${tg}" style="flex:1;min-width:130px;width:auto"><input type="number" step="any" id="le_k" value="${ac===''||ac==null?'':ac}" style="width:105px"><button class="lk" onclick="lgSave('${q}','${t}',${i})">Simpan</button><button class="lk" onclick="dtTab('${q}','${t}',${i})">Batal</button></div>`;
+   if(mode=='edit')extra=`<div style="display:flex;gap:6px;align-items:center;padding:6px 0 10px;flex-wrap:wrap"><input type="date" id="le_d" value="${tg}" style="flex:1;min-width:130px;width:auto"><input type="number" step="any" id="le_k" value="${ac===''||ac==null?'':ac}" style="width:105px">${isPM&&k=='AB'?`<select id="le_j" style="width:100px">${jo(x[7]||x[5])}</select>`:''}${isPM?`<input type="text" id="le_c" maxlength="300" placeholder="Catatan" value="${esc(x[8]).replace(/"/g,'&quot;')}" style="flex:1 1 100%;width:100%">`:''}<button class="lk" onclick="lgSave('${q}','${t}',${i})">Simpan</button><button class="lk" onclick="dtTab('${q}','${t}',${i})">Batal</button></div>`;
    else extra=`<div style="display:flex;gap:6px;padding:6px 0 10px"><button class="lk" onclick="dtTab('${q}','${t}',${i},'edit')">✎ Edit</button><button class="lk" style="color:#b91c1c;border-color:#fca5a5;background:#fff1f2" onclick="lgDel('${q}','${t}',${i})">🗑 Hapus</button></div>`}
-  return `<div${sel===i?` class="lgsel" data-id="${id.replace(/"/g,'&quot;')}" data-t="${t}" data-mode="${mode||'menu'}"`:''} style="${sel===i?'background:#fff7ed;margin:0 -10px;padding:0 10px':''}"><div class="hr" style="cursor:pointer" onclick="dtTab('${q}','${t}',${sel===i&&!mode?-1:i})">${main}</div>${extra}</div>`};
+  return `<div${sel===i?` class="lgsel" data-id="${id.replace(/"/g,'&quot;')}" data-t="${t}" data-mode="${mode||'menu'}"`:''} style="${sel===i?'background:#fff7ed;margin:0 -10px;padding:0 10px':''}"><div class="hr" style="cursor:pointer" onclick="dtTab('${q}','${t}',${sel===i&&!mode?-1:i})">${main}</div>${nt}${extra}</div>`};
  const body=L.length?L.map(rowH).join(''):empty(t=='pm'?'Belum ada riwayat PM':(fl&&L0.length?'Tidak ada riwayat KM pada bulan ini':'Belum ada riwayat KM'));
  const mb=t=='km'?`<div style="display:flex;align-items:center;gap:8px;margin-top:10px"><span class="lbl">Bulan</span><input type="month" value="${lgM}" onchange="lgMonth('${q}',this.value)" style="width:150px;height:32px"><span class="cnt">${L.length} catatan${fl?' · total '+L0.length:''}</span></div>`:'';
  const on='background:#d95a2b;color:#fff;border-color:#d95a2b',tb=(key,label,n)=>`<button class="lk" style="${t==key?on:''}" onclick="dtTab('${q}','${key}')">${label} (${n})</button>`;
@@ -603,11 +605,11 @@ document.addEventListener('click',ev=>{
  const tg=ev.target;if(!tg||!tg.isConnected)return;
  if(tg.closest('.lgsel')||tg.closest('.hr')||tg.closest('button')||tg.closest('input'))return;
  dtTab(sl.dataset.id,sl.dataset.t)});
-function lgApply(t,x,op,nd,na,keep){
+function lgApply(t,x,op,nd,na,keep,nj,nc){
  const kk=k,c=C[kk],isKM=t=='km',id=String(x[3]),row=D.rows[kk].find(r=>String(r[c.id])==id),arr=isKM?D.km:D.hist,r2=v=>Math.round(v*100)/100,
   old=+(isKM?x[5]:x[6]),comp=isKM?null:x[5],
   late=(fn)=>{let b=null;(arr||[]).forEach(e=>{if(e===x&&op=='del')return;if(String(e[3])!=id||e[2]!=SN[kk]||!fn(e))return;if(!b||String(e[1]).slice(0,10)>=String(b[1]).slice(0,10))b=e});return b};
- if(op=='del'){const i=arr.indexOf(x);if(i>=0)arr.splice(i,1)}else{x[1]=nd;if(isKM)x[5]=na;else x[6]=na}
+ if(op=='del'){const i=arr.indexOf(x);if(i>=0)arr.splice(i,1)}else{x[1]=nd;if(isKM)x[5]=na;else{x[6]=na;if(nj!=null)x[7]=nj;if(nc!=null)x[8]=nc}}
  if(!keep)window._kmU=[];
  if(!row)return;
  const torAll=()=>c.tor.forEach((tt,j)=>{const n=num(row[c.nx[j]]),a=num(row[c.act]);row[tt]=n!=null&&a!=null?r2(n-a):''});
@@ -623,7 +625,7 @@ function lgApply(t,x,op,nd,na,keep){
    c.tor.forEach((tt,jj)=>{const l=num(row[c.last[jj]]);row[c.nx[jj]]=l!=null?r2(l+ +D.cfg[c.w[jj]][1]):''});
    torAll()}
  }}
-function lgBody(t,x,extra){return Object.assign({key:k,src:t=='km'?'KM':'PM',id:String(x[3]),tgl:String(x[1]).slice(0,10),act:+(t=='km'?x[5]:x[6]),komp:t=='km'?'':x[5]},extra)}
+function lgBody(t,x,extra){return Object.assign({key:k,src:t=='km'?'KM':'PM',id:String(x[3]),tgl:String(x[1]).slice(0,10),act:+(t=='km'?x[5]:x[6]),komp:t=='km'?'':x[5],jenis:t=='km'?'':String(x[7]==null?'':x[7])},extra)}
 function lgDel(id,t,i){
  const e=lgList(id,t)[i];if(!e)return;const x=e.x,fm=v=>(+v).toLocaleString('id-ID'),c=C[k],row=D.rows[k].find(r=>String(r[c.id])==String(id)),
   act=+(t=='km'?x[5]:x[6]),cur=row&&(t=='km'?num(row[c.act])===act:num(row[c.last[c.nm.indexOf(x[5])]])===act);
@@ -634,9 +636,9 @@ function lgSave(id,t,i){
  const e=lgList(id,t)[i];if(!e)return;const x=e.x,nd=$('#le_d').value,raw=String($('#le_k').value).trim().replace(',','.'),na=raw===''?NaN:Number(raw);
  if(!/^\d{4}-\d\d-\d\d$/.test(nd)){alert('Tanggal belum diisi.');return}
  if(!isFinite(na)||na<0){alert('Angka KM tidak valid.');return}
- const act=+(t=='km'?x[5]:x[6]);if(nd==String(x[1]).slice(0,10)&&na===act){dtTab(id,t);return}
- const body=lgBody(t,x,{op:'logedit',ntgl:nd,nact:na}),od=String(x[1]).slice(0,10);
- lgApply(t,x,'edit',nd,na);undoPush({t:'edit',tt:t,x,id:String(id),od,oa:act,label:'edit riwayat '+(t=='km'?'KM':'PM')+' '+id});draw();dtTab(id,t);enqueue(body)}
+ const act=+(t=='km'?x[5]:x[6]),oj=String(x[7]==null?'':x[7]),nj=t=='pm'&&$('#le_j')?$('#le_j').value:null,oc=String(x[8]==null?'':x[8]),nc=t=='pm'&&$('#le_c')?$('#le_c').value.trim():null;if(nd==String(x[1]).slice(0,10)&&na===act&&(nj==null||nj===oj)&&(nc==null||nc===oc)){dtTab(id,t);return}
+ const body=lgBody(t,x,{op:'logedit',ntgl:nd,nact:na,njenis:nj,ncat:nc}),od=String(x[1]).slice(0,10);
+ lgApply(t,x,'edit',nd,na,0,nj,nc);undoPush({t:'edit',tt:t,x,id:String(id),od,oa:act,oj,oc,label:'edit riwayat '+(t=='km'?'KM':'PM')+' '+id});draw();dtTab(id,t);enqueue(body)}
 function showH(id){const c=C[k],a=histOf(id).reverse();
  $('#f').innerHTML=`<div class="hd"><div><b class="ft">History PM</b><div class="fs">${id}</div></div></div><div class="hs" style="height:auto;max-height:60vh;min-height:120px">${a.length?a.map(([x,n])=>`<div class="hr"><span class="hn">${n}.</span><span>${fd(x[1])}</span><b>${x[7]||x[5]}</b><span class="hk">${x[6]===''||x[6]==null?'—':(+x[6]).toLocaleString('id-ID')+' '+c.u}</span></div>`).join(''):'<div style="padding:40px 0;text-align:center;color:#64748b">Belum ada riwayat</div>'}</div><div class="bar"><button class="big on" onclick="openF('${id.replace(/'/g,"\\'")}')">Kembali</button></div>`}
 const kmOf=id=>(D.km||[]).filter(x=>String(x[3])==String(id)&&x[2]==SN[k]);
@@ -706,7 +708,7 @@ function pmGo(id,j){
  (window._kmU=window._kmU||[]).push({kk,id,old:row.slice(),nv:act,svc:j});if(window._kmU.length>30)window._kmU.shift();
  row[c.tgl]=tgl;row[c.last[j]]=act;
  c.tor.forEach((t,jj)=>{const l=num(row[c.last[jj]]);if(l!=null)row[c.nx[jj]]=r2(l+ +D.cfg[c.w[jj]][1]);const n=num(row[c.nx[jj]]);row[t]=n!=null?r2(n-act):''});
- D.hist=D.hist||[];D.hist.push([iso,tgl,SN[kk],id,row[c.tipe],nm,act,jenis]);
+ D.hist=D.hist||[];D.hist.push([iso,tgl,SN[kk],id,row[c.tipe],nm,act,jenis,note]);
  (D.km=D.km||[]).push([iso,tgl,SN[kk],id,row[c.tipe],act,note]);
  window._kmCommit=1;try{draw()}finally{window._kmCommit=0}
  enqueue({key:kk,id,tgl,act:String(act),note,jenis,service:[j]})}
@@ -758,7 +760,7 @@ function abGo(id,jenis){
  undoPush({kk,id,old:row.slice(),nv:act,svc:0});
  row[c.tgl]=tgl;row[c.last[0]]=act;
  c.tor.forEach((t,jj)=>{const l=num(row[c.last[jj]]);if(l!=null)row[c.nx[jj]]=r2(l+ +D.cfg[c.w[jj]][1]);const n=num(row[c.nx[jj]]);row[t]=n!=null?r2(n-act):''});
- (D.hist=D.hist||[]).push([iso,tgl,SN[kk],id,row[c.tipe],c.nm[0],act,jenis]);
+ (D.hist=D.hist||[]).push([iso,tgl,SN[kk],id,row[c.tipe],c.nm[0],act,jenis,note]);
  (D.km=D.km||[]).push([iso,tgl,SN[kk],id,row[c.tipe],act,note]);
  window._kmCommit=1;try{draw()}finally{window._kmCommit=0}
  enqueue({key:kk,id,tgl,act:String(act),note,jenis,service:[0]})}
@@ -768,8 +770,8 @@ function undoBtn(){const u=(window._kmU||[]).slice(-1)[0];return u?`<button clas
 function undoPlan(u){PL=JSON.parse(u.snap);pSave();draw()}
 function undoEdit(u){const x=u.x,arr=u.tt=='km'?D.km:D.hist;
  if(!(arr||[]).includes(x)){alert('Riwayat sudah berubah (data dimuat ulang), edit ini tidak bisa dibatalkan.');return}
- const body=lgBody(u.tt,x,{op:'logedit',ntgl:u.od,nact:u.oa});
- lgApply(u.tt,x,'edit',u.od,u.oa,1);draw();
+ const body=lgBody(u.tt,x,{op:'logedit',ntgl:u.od,nact:u.oa,njenis:u.oj,ncat:u.oc});
+ lgApply(u.tt,x,'edit',u.od,u.oa,1,u.oj,u.oc);draw();
  const ft=document.querySelector('#f .ft');if((k=='DT'||k=='AB'||k=='LV')&&ft&&ft.textContent==u.id&&document.querySelector('#m.show'))dtTab(u.id,u.tt);
  enqueue(body)}
 function undoKM(){
@@ -824,7 +826,7 @@ async function save(id){
   body.service.forEach(i=>{row[c.last[i]]=+body.act});
   c.tor.forEach((t,j)=>{const l=num(row[c.last[j]]);if(l!=null)row[c.nx[j]]=r2(l+ +D.cfg[c.w[j]][1]);
    const n=num(row[c.nx[j]]),a=num(row[c.act]);row[t]=n!=null&&a!=null?r2(n-a):''});
-  D.hist=D.hist||[];hs=body.service.map(i=>[new Date().toISOString(),body.tgl,SN[kk],id,row[c.tipe],c.nm[i],+body.act,body.jenis||(c.nm.length>1?'PM '+c.nm[i]:'')]);
+  D.hist=D.hist||[];hs=body.service.map(i=>[new Date().toISOString(),body.tgl,SN[kk],id,row[c.tipe],c.nm[i],+body.act,body.jenis||(c.nm.length>1?'PM '+c.nm[i]:''),body.note==null?'':String(body.note)]);
   D.hist.push(...hs);if(body.act!=='')(D.km=D.km||[]).push([new Date().toISOString(),body.tgl,SN[kk],id,row[c.tipe],+body.act,body.note]);draw()}
  enqueue(body)}
 
