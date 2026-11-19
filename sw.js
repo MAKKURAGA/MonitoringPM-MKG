@@ -1,7 +1,7 @@
 /* PM MKG - service worker
    VERSI cukup dinaikkan jika file statis (ikon/manifest) berubah.
    index.html sudah network-first, jadi selalu mengambil versi terbaru saat ada sinyal. */
-const VERSI='pm-mkg-v10';
+const VERSI='pm-mkg-v11';
 const WAJIB=['./index.html'];                                   /* gagal di-cache = install gagal & diulang */
 const OPSIONAL=['./','./manifest.json','./icon-192.png','./icon-512.png'];
 const TIMEOUT_MS=4000;                                          /* sinyal lemah: setelah ini pakai cache */

@@ -439,6 +439,13 @@ function pNext(kk,r,c,id,best){
    if(ha!=null&&n){const m0=Math.round(ha/500);let bm=null;
     for(let d=-3;d<=3;d++){const mm=m0+d;if(mm>=1&&HEC[(mm-1)%8]==n&&(bm==null||Math.abs(mm-ha/500)<Math.abs(bm-ha/500)))bm=mm}
     if(bm!=null){m=bm+1;e=0}}}
+  /* urutan dibaca dari RIWAYAT PM unit (bukan tebakan HM): cari posisi siklus yang paling cocok dengan PM-PM terakhir; bila ambigu, pakai tebakan HM di atas */
+  {const hs=(D.hist||[]).map((x,ix)=>[x,ix]).filter(z=>String(z[0][3])==String(id)&&z[0][2]==SN.AB&&String(z[0][7]==null?'':z[0][7]).trim()).sort((a,b)=>(pt(a[0][1])||'').localeCompare(pt(b[0][1])||'')||a[1]-b[1]).map(z=>parseInt(String(z[0][7]).replace(/\D/g,''))).filter(Boolean);
+   if(hs.length){const L=hs.length;let bp=-1,bl=0,tie=0;
+    for(let p=0;p<8;p++){if(HEC[p]!=hs[L-1])continue;let l=1;while(l<L&&l<8&&HEC[((p-l)%8+8)%8]==hs[L-1-l])l++;if(l>bl){bl=l;bp=p;tie=0}else if(l==bl)tie++}
+    if(bp>=0&&bl>=2&&!tie){const ip=(bp+1)%8,ha2=H?num(H[6]):null,t0=ha2!=null?ha2/500+1:(m!=null?m:1);let b2=null;
+     for(let mm=Math.max(1,Math.floor(t0)-8);mm<=Math.ceil(t0)+8;mm++){if((mm-1)%8==ip&&(b2==null||Math.abs(mm-t0)<Math.abs(b2-t0)))b2=mm}
+     if(b2!=null){m=b2;e=0}}}}
   if(m==null&&best)m=Math.max(1,Math.round(((act==null?0:act)+best.v)/500));
   return m==null?null:{t:'PM '+HEC[(m-1)%8],e,i:(m-1)%8,hm:m*500,u:'HM'}}
  if(kk=='LV'){const H=lastPM(id,SN.LV),act=num(r[c.act]);let m=null,e=1;
@@ -554,7 +561,7 @@ const histOf=id=>(D.hist||[]).filter(x=>String(x[3])==id&&x[2]==SN[k]).sort((a,b
   const st=Math.max(0,a.length-MAX);
   if(st)h+='<div class="tn">… '+st+' riwayat sebelumnya</div>';
   a.slice(st).forEach((o,i)=>{const x=o.x,km=x[6]===''||x[6]==null?'':(+x[6]).toLocaleString('id-ID')+' '+c.u,jn=String(x[7]==null?'':x[7]).trim();
-   const last=o===a[a.length-1];h+='<div'+(last?' style="font-weight:700"':'')+'>'+(st+i+1)+'. '+X(fd(pt(x[1])||x[1]))+(jn?' '+X(jn):'')+(km?' ('+km+')':'')+(last?' <span style="color:#c2410c">← Last servis</span>':'')+'</div>'});
+   const last=o===a[a.length-1];h+='<div>'+(st+i+1)+'. '+X(fd(pt(x[1])||x[1]))+(jn?' '+X(jn):'')+(km?' ('+km+')':'')+(last?' <span style="color:#c2410c">← Last servis</span>':'')+'</div>'});
   return h+(off?'<div class="tn" style="margin-top:3px">Unit Out Site · hanya untuk dilihat</div>':'<div class="tn" style="margin-top:3px">Klik untuk update PM'+(k=='DT'?' '+X(nm):'')+'</div>')}
  function hide(){tip.style.display='none';cur=null}
  document.addEventListener('mouseover',ev=>{
